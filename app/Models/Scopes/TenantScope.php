@@ -8,7 +8,13 @@ use Illuminate\Database\Eloquent\Scope;
 use Illuminate\Support\Facades\Auth;
 
 class TenantScope implements Scope
-{
+{/**
+     * Aplica el scope a todas las consultas de Eloquent.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $builder
+     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @return void
+     */
     public function apply(Builder $builder, Model $model)
     {
         // Ignorar si estamos corriendo comandos en la terminal (migraciones/seeders)
