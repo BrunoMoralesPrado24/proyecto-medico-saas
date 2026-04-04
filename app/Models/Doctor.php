@@ -32,4 +32,13 @@ class Doctor extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function clinics()
+    {
+        // Si Paco le puso 'clinic_doctor' a su tabla pivote, Laravel la encontrará automáticamente.
+        // Usamos withPivot para traernos si está activo y el precio de consulta.
+        return $this->belongsToMany(\App\Models\Clinic::class, 'clinic_doctor')
+                    ->withPivot('precio_consulta', 'is_active')
+                    ->withTimestamps();
+    }
 }
