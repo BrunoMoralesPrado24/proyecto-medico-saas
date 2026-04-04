@@ -11,6 +11,8 @@ import TextInput from '@/Components/TextInput.vue';
 const form = useForm({
     name: '',
     clinic_name: '',
+    cedula_profesional: '',
+    universidad_egreso: '',
     email: '',
     password: '',
     password_confirmation: '',
@@ -58,6 +60,30 @@ const submit = () => {
                     required
                 />
                 <InputError class="mt-2" :message="form.errors.clinic_name" />
+            </div>
+
+            <div class="mt-4">
+                <InputLabel for="cedula_profesional" value="Cédula Profesional" />
+                <TextInput
+                    id="cedula_profesional"
+                    v-model="form.cedula_profesional"
+                    type="text"
+                    class="mt-1 block w-full"
+                    required
+                />
+                <InputError class="mt-2" :message="form.errors.cedula_profesional" />
+            </div>
+
+            <div class="mt-4">
+                <InputLabel for="universidad_egreso" value="Universidad de Egreso" />
+                <TextInput
+                    id="universidad_egreso"
+                    v-model="form.universidad_egreso"
+                    type="text"
+                    class="mt-1 block w-full"
+                    required
+                />
+                <InputError class="mt-2" :message="form.errors.universidad_egreso" />
             </div>
 
             <div class="mt-4">
