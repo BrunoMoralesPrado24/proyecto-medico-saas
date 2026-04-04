@@ -24,16 +24,17 @@ class CreateNewUser implements CreatesNewUsers
      */
     public function create(array $input): User
     {
-        // 1. Validación estricta
+        // 1. Validaciones estrictas (Alineadas a tu base de datos)
         Validator::make($input, [
             'name' => ['required', 'string', 'max:255'],
             'clinic_name' => ['required', 'string', 'max:255'],
+            'cedula_profesional' => ['required', 'string', 'max:20'],
+            'universidad_egreso' => ['required', 'string', 'max:255'], // <-- NUEVO
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
             'password' => $this->passwordRules(),
             'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['accepted', 'required'] : '',
         ])->validate();
 
-        // 2. Transacción atómica: Si algo falla, se revierte todo para no dejar basura en la BD
         return DB::transaction(function () use ($input) {
 
             $user = User::create([
@@ -42,8 +43,11 @@ class CreateNewUser implements CreatesNewUsers
                 'password' => Hash::make($input['password']),
             ]);
 
+            // 2. Inyectamos Cédula y Universidad en la tabla estricta de Paco
             $doctor = Doctor::create([
                 'user_id' => $user->id,
+                'cedula_profesional' => $input['cedula_profesional'],
+                'universidad_egreso' => $input['universidad_egreso'], // <-- NUEVO
             ]);
 
             $clinic = Clinic::create([
@@ -52,7 +56,6 @@ class CreateNewUser implements CreatesNewUsers
                 'join_code' => strtoupper(Str::random(8)),
             ]);
 
-            // Unimos a Doctor y Clínica usando la tabla Pivote de Paco
             ClinicDoctor::create([
                 'clinic_id' => $clinic->id,
                 'doctor_id' => $doctor->id,
