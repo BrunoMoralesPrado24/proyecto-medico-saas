@@ -3,23 +3,37 @@
 namespace App\Traits;
 
 use App\Models\Scopes\TenantScope;
-use Illuminate\Support\Facades\Auth;
 
 trait BelongsToTenant
 {
+    /**
+     * El método "boot" intercepta los eventos del modelo.
+     * @return void
+     */
     protected static function bootBelongsToTenant()
     {
+        // 1. Agregar el Global Scope para bloquear las lecturas
         static::addGlobalScope(new TenantScope);
 
-        static::creating(function ($model) {
-            if (empty($model->clinic_id) && Auth::check() && Auth::user()->clinic_id) {
-                $model->clinic_id = Auth::user()->clinic_id;
+        // 2. Interceptar DESPUÉS de la creación para unir el registro a la tabla pivote
+        static::created(function ($model) {
+            $activeClinicId = session('active_clinic_id');
+
+            if ($activeClinicId) {
+                // Attach crea el registro en la tabla pivote (ej. clinic_patient)
+                $model->clinics()->attach($activeClinicId);
             }
         });
     }
 
-    public function clinic()
+    /**
+     * Define la relación Muchos a Muchos hacia las clínicas.
+     * Funciona para Pacientes, Doctores, Citas, etc.
+     */
+    public function clinics()
     {
-        return $this->belongsTo(\App\Models\Clinic::class);
+        // Asume que la convención de nombres de Laravel es correcta
+        // ej. si se usa en Patient, buscará la tabla pivote 'clinic_patient'
+        return $this->belongsToMany(\App\Models\Clinic::class);
     }
 }

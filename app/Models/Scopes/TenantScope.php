@@ -5,11 +5,12 @@ namespace App\Models\Scopes;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
-use Illuminate\Support\Facades\Auth;
 
 class TenantScope implements Scope
-{/**
+{
+    /**
      * Aplica el scope a todas las consultas de Eloquent.
+     * Adaptado para arquitectura Multi-Workspace (Muchos a Muchos).
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $builder
      * @param  \Illuminate\Database\Eloquent\Model  $model
@@ -17,14 +18,19 @@ class TenantScope implements Scope
      */
     public function apply(Builder $builder, Model $model)
     {
-        // Ignorar si estamos corriendo comandos en la terminal (migraciones/seeders)
+        // 1. Omitir en consola (Artisan)
         if (app()->runningInConsole()) {
             return;
         }
 
-        // Aplicar el filtro SQL de seguridad
-        if (Auth::hasUser() && Auth::user()->clinic_id) {
-            $builder->where($model->getTable() . '.clinic_id', Auth::user()->clinic_id);
+        // 2. Leer la "Clínica Activa" de la sesión del usuario
+        $activeClinicId = session('active_clinic_id');
+
+        // 3. Si hay una clínica activa, filtramos usando la relación de la tabla pivote
+        if ($activeClinicId) {
+            $builder->whereHas('clinics', function ($query) use ($activeClinicId) {
+                $query->where('clinics.id', $activeClinicId);
+            });
         }
     }
 }
