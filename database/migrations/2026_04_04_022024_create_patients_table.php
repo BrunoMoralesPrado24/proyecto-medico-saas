@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             
             // Llave foránea hacia el Usuario Titular / Guardián
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
             
             // Datos Estructurados
             $table->string('nombre');
