@@ -34,6 +34,7 @@ Route::middleware([
         })->name('dashboard');
 
         // *Aquí pondremos después todas las rutas de Pacientes, Citas, etc.*
-
+        //  RUTAS DE PACIENTES
+        Route::resource('patients', App\Http\Controllers\PatientController::class);
     });
 });
