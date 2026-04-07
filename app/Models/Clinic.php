@@ -38,4 +38,11 @@ class Clinic extends Model
     {
         return $this->belongsTo(User::class, 'admin_id');
     }
+
+    public function patients()
+    {
+        return $this->belongsToMany(\App\Models\Patient::class, 'clinic_patient')
+                    ->withPivot('expediente_fisico')
+                    ->withTimestamps();
+    }
 }

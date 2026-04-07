@@ -13,19 +13,22 @@ return new class extends Migration
     {
         Schema::create('patients', function (Blueprint $table) {
             $table->id();
-            
+
             // Llave foránea hacia el Usuario Titular / Guardián
             $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
-            
+
             // Datos Estructurados
             $table->string('nombre');
             $table->date('fecha_nacimiento');
             $table->string('telefono', 20)->nullable();
             $table->string('email')->nullable();
-            
+
             // El JSONB para el expediente estático
             $table->jsonb('info_paciente')->nullable();
-            
+
+            // Candado Legal LFPDPPP (T6)
+            $table->timestamp('privacy_notice_accepted_at')->nullable();
+
             // Marcas de tiempo y Soft Deletes
             $table->timestamps();
             $table->softDeletes();

@@ -10,9 +10,6 @@ class Patient extends Model
 {
     use HasFactory, SoftDeletes;
 
-    /**
-     * Los atributos que se pueden asignar masivamente.
-     */
     protected $fillable = [
         'user_id',
         'nombre',
@@ -20,21 +17,29 @@ class Patient extends Model
         'telefono',
         'email',
         'info_paciente',
+        'privacy_notice_accepted_at', // <-- NUEVO
     ];
 
-    /**
-     * Los atributos que deben ser convertidos (Casteados).
-     */
     protected $casts = [
         'fecha_nacimiento' => 'date',
-        'info_paciente' => 'array', // Transforma el JSONB de PostgreSQL a un Array en PHP
+        'privacy_notice_accepted_at' => 'datetime', // <-- NUEVO
+        'info_paciente' => 'array',
     ];
 
-    /**
-     * RELACIÓN: Obtiene el usuario (Guardián/Titular) al que pertenece este paciente.
-     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * RELACIÓN: Obtiene las clínicas donde este paciente tiene un expediente abierto.
+     */
+    public function clinics()
+    {
+        return $this->belongsToMany(Clinic::class, 'clinic_patient')
+                    ->withPivot('expediente_fisico')
+                    ->withTimestamps();
+    }
+
+
 }
