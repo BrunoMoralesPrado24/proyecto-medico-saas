@@ -37,7 +37,9 @@ class HandleInertiaRequests extends Middleware
     {
         return [
             ...parent::share($request),
-            //
+            
+            // Mandamos los roles de Spatie al frontend de manera segura
+            'user_roles' => $request->user() ? $request->user()->getRoleNames() : [],
         ];
     }
 }
