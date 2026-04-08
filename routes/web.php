@@ -3,8 +3,15 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
-use App\Http\Controllers\ClinicSelectionController; // <-- NUEVO
-use App\Http\Middleware\EnsureActiveClinic; // <-- NUEVO
+
+// 1. IMPORTACIONES LIMPIAS:
+// Traemos los controladores aquí arriba para no tener que escribir 
+// "App\Http\Controllers\Doctor\..." en cada línea de abajo.
+use App\Http\Controllers\Doctor\ClinicSelectionController;
+use App\Http\Controllers\Doctor\PatientController;
+use App\Http\Middleware\EnsureActiveClinic; 
+use Illuminate\Http\Request;
+use App\Models\User;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -15,26 +22,50 @@ Route::get('/', function () {
     ]);
 });
 
-// Todo lo que está aquí adentro requiere que el usuario haya iniciado sesión
+Route::post('/check-email', function (Request $request) {
+    $exists = \App\Models\User::where('email', $request->email)->exists();
+    return response()->json(['exists' => $exists]);
+})->middleware('auth:sanctum');
+
+// ZONA PROTEGIDA: Solo usuarios logueados
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
 
-    // 1. Rutas de Selección de Clínica (El Cadenero las deja pasar)
-    Route::get('/select-clinic', [ClinicSelectionController::class, 'select'])->name('clinics.select');
-    Route::post('/select-clinic', [ClinicSelectionController::class, 'set'])->name('clinics.set');
+    // ==========================================
+    // ÁREA DEL MÉDICO (Prefijo URL: /doctor/...)
+    // ==========================================
+    Route::prefix('doctor')->group(function () {
 
-    // 2. Grupo ULTRA PROTEGIDO (Requiere sesión + Clínica Seleccionada obligatoria)
-    Route::middleware([EnsureActiveClinic::class])->group(function () {
+        // 1. Rutas de Selección de Clínica 
+        // URLs: /doctor/select-clinic | Nombres: clinics.select
+        Route::get('/select-clinic', [ClinicSelectionController::class, 'select'])->name('clinics.select');
+        Route::post('/select-clinic', [ClinicSelectionController::class, 'set'])->name('clinics.set');
 
-        Route::get('/dashboard', function () {
-            return Inertia::render('Dashboard');
-        })->name('dashboard');
+        // 2. Grupo ULTRA PROTEGIDO (Requiere Clínica Seleccionada)
+        Route::middleware([EnsureActiveClinic::class])->group(function () {
 
-        // *Aquí pondremos después todas las rutas de Pacientes, Citas, etc.*
-        //  RUTAS DE PACIENTES
-        Route::resource('patients', App\Http\Controllers\PatientController::class);
+            // URL: /doctor/dashboard | Nombre: dashboard
+            Route::get('/dashboard', function () {
+                return Inertia::render('Dashboard');
+            })->name('dashboard');
+
+            // RUTAS DE PACIENTES
+            // URL: /doctor/patients | Nombres cortos: patients.index, patients.create, etc.
+            Route::resource('patients', PatientController::class);
+            
+            // *Aquí irán las futuras rutas del doctor*
+            // Route::resource('appointments', AppointmentController::class);
+        });
     });
+
+    // ==========================================
+    // ÁREA DEL PACIENTE (Prefijo URL: /paciente/...)
+    // ==========================================
+    // Route::prefix('paciente')->group(function () {
+    //      Aquí meteremos las rutas cuando armemos el portal del paciente
+    // });
+
 });
