@@ -13,17 +13,32 @@ use Inertia\Inertia;
 
 class PatientController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // 1. Obtenemos la clínica en la que el doctor está trabajando hoy
+        // 1. Obtenemos la clínica activa
         $clinicId = session('active_clinic_id');
-
-        // 2. Buscamos a la clínica y le pedimos SOLO sus pacientes
         $clinic = Clinic::findOrFail($clinicId);
-        $patients = $clinic->patients()->orderBy('nombre')->get();
+
+        // 2. Leemos lo que el usuario escribió en el buscador
+        $search = $request->search;
+
+        // 3. Consulta Inteligente con Buscador y Paginación
+        $patients = $clinic->patients()
+            ->when($search, function ($query, $search) {
+                // Buscamos por nombre o por teléfono. 
+                // Usamos 'ilike' que es perfecto para PostgreSQL (ignora mayúsculas/minúsculas)
+                $query->where(function ($q) use ($search) {
+                    $q->where('nombre', 'ilike', "%{$search}%")
+                      ->orWhere('telefono', 'ilike', "%{$search}%");
+                });
+            })
+            ->orderBy('nombre')
+            ->paginate(10)
+            ->withQueryString(); // Magia: Mantiene el ?search=... en los botones de "Siguiente página"
 
         return Inertia::render('Doctor/Patients/Index', [
-            'patients' => $patients
+            'patients' => $patients,
+            'filters' => ['search' => $search] // Regresamos el texto a Vue para que el input no se borre
         ]);
     }
 
@@ -41,7 +56,11 @@ class PatientController extends Controller
             'mode' => 'required|in:huerfano,vincular,crear',
             'email' => 'nullable|email',
             'nombre_titular' => 'nullable|required_if:mode,crear|string|max:255',
-            'privacy_notice' => 'accepted'
+            'privacy_notice' => 'accepted',
+            'sexo' => 'nullable|in:Masculino,Femenino,Otro',
+            'estado_civil' => 'nullable|string|max:255',
+            'ocupacion' => 'nullable|string|max:255',
+            'religion' => 'nullable|string|max:255',
         ]);
 
         $clinicId = session('active_clinic_id');
@@ -80,6 +99,10 @@ class PatientController extends Controller
                 'email' => $request->email,
                 'user_id' => $userId,
                 'privacy_notice_accepted_at' => now(),
+                'sexo' => $request->sexo,                 // <--- AGREGAR
+                'estado_civil' => $request->estado_civil, // <--- AGREGAR
+                'ocupacion' => $request->ocupacion,       // <--- AGREGAR
+                'religion' => $request->religion,         // <--- AGREGAR
             ]);
 
             // Lo unimos a la clínica
@@ -87,7 +110,7 @@ class PatientController extends Controller
                 'expediente_fisico' => 'EXP-' . date('Y') . '-' . str_pad($patient->id, 4, '0', STR_PAD_LEFT)
             ]);
 
-            return redirect()->route('patients.index');
+            return redirect()->route('patients.index')->with('new_patient_id', $patient->id); // <--- CAMBIAR ESTA LÍNEA
         });
     }
 
@@ -110,7 +133,11 @@ class PatientController extends Controller
             'fecha_nacimiento' => 'required|date',
             'mode' => 'required|in:editar,vincular,crear', // 'editar' es el modo normal
             'email' => 'nullable|email',
-            'nombre_titular' => 'required_if:mode,crear|string|max:255',
+            'nombre_titular' => 'nullable|required_if:mode,crear|string|max:255',
+            'sexo' => 'nullable|in:Masculino,Femenino,Otro',
+            'estado_civil' => 'nullable|string|max:255',
+            'ocupacion' => 'nullable|string|max:255',
+            'religion' => 'nullable|string|max:255',
         ]);
     
         $userId = $patient->user_id;
@@ -140,6 +167,10 @@ class PatientController extends Controller
             'telefono' => $request->telefono,
             'email' => $request->email, // Ahora se actualiza siempre
             'user_id' => $userId, // Se actualiza si hubo vinculación
+            'sexo' => $request->sexo,
+            'estado_civil' => $request->estado_civil,
+            'ocupacion' => $request->ocupacion,
+            'religion' => $request->religion,
         ]);
     
         return redirect()->route('patients.index');
