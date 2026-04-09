@@ -9,6 +9,7 @@ use Inertia\Inertia;
 // "App\Http\Controllers\Doctor\..." en cada línea de abajo.
 use App\Http\Controllers\Doctor\ClinicSelectionController;
 use App\Http\Controllers\Doctor\PatientController;
+use App\Http\Controllers\Doctor\MedicalRecordController;
 use App\Http\Middleware\EnsureActiveClinic; 
 use Illuminate\Http\Request;
 use App\Models\User;
@@ -55,6 +56,11 @@ Route::middleware([
             // RUTAS DE PACIENTES
             // URL: /doctor/patients | Nombres cortos: patients.index, patients.create, etc.
             Route::resource('patients', PatientController::class);
+            
+            //MÓDULO: Expedientes Clínicos (Santuario Médico)
+            Route::get('/medical-records', [MedicalRecordController::class, 'index'])->name('medical-records.index');
+            Route::get('/medical-records/{patient}', [MedicalRecordController::class, 'show'])->name('medical-records.show');
+            Route::put('/medical-records/{patient}', [MedicalRecordController::class, 'update'])->name('medical-records.update');
             
             // *Aquí irán las futuras rutas del doctor*
             // Route::resource('appointments', AppointmentController::class);

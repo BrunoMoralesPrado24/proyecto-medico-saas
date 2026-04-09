@@ -12,6 +12,11 @@ const form = useForm({
     email: '',
     nombre_titular: '',
     privacy_notice: false,
+    // Nuevos campos NOM-004
+    sexo: '',
+    estado_civil: '',
+    ocupacion: '',
+    religion: '',
 });
 
 // Variables para la verificación en vivo
@@ -73,7 +78,8 @@ const submit = () => {
             <form @submit.prevent="submit">
                 
                 <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">1. Datos Personales</h3>
-                <div class="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-8">
+                
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-4">
                     <div class="col-span-2">
                         <label class="block text-sm font-medium text-gray-700">Nombre Completo del Paciente</label>
                         <input v-model="form.nombre" type="text" class="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm" required autofocus>
@@ -87,6 +93,30 @@ const submit = () => {
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Teléfono (Opcional)</label>
                         <input v-model="form.telefono" type="text" class="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-4 mb-8 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Sexo (Biológico)</label>
+                        <select v-model="form.sexo" class="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm bg-white">
+                            <option value="">Seleccionar...</option>
+                            <option value="Masculino">Masculino</option>
+                            <option value="Femenino">Femenino</option>
+                            <option value="Otro">Otro / Intersex</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Estado Civil</label>
+                        <input v-model="form.estado_civil" type="text" placeholder="Ej. Soltero(a)" class="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Ocupación</label>
+                        <input v-model="form.ocupacion" type="text" placeholder="Ej. Estudiante" class="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Religión</label>
+                        <input v-model="form.religion" type="text" placeholder="Opcional" class="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm">
                     </div>
                 </div>
 

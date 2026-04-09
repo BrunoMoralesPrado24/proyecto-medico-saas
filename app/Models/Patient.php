@@ -11,13 +11,16 @@ class Patient extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'user_id',
-        'nombre',
-        'fecha_nacimiento',
-        'telefono',
-        'email',
-        'info_paciente',
-        'privacy_notice_accepted_at', // <-- NUEVO
+        'nombre', 
+        'fecha_nacimiento', 
+        'sexo', // <-- NUEVO
+        'telefono', 
+        'email', 
+        'estado_civil', // <-- NUEVO
+        'ocupacion', // <-- NUEVO
+        'religion', // <-- NUEVO
+        'user_id', 
+        'privacy_notice_accepted_at'
     ];
 
     protected $casts = [
@@ -39,6 +42,14 @@ class Patient extends Model
         return $this->belongsToMany(Clinic::class, 'clinic_patient')
                     ->withPivot('expediente_fisico')
                     ->withTimestamps();
+    }
+
+    /**
+     * Obtiene el historial médico confidencial del paciente.
+     */
+    public function medicalHistory()
+    {
+        return $this->hasOne(MedicalHistory::class);
     }
 
 
