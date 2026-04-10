@@ -29,6 +29,7 @@ class Clinic extends Model
         'codigo_postal',
         'ciudad',
         'estado',
+        'clues',
     ];
 
     /**

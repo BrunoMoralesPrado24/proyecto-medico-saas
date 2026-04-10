@@ -5,7 +5,7 @@ import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
 const page = usePage();
-const userRoles = computed(() => page.props.auth.roles || []);
+const userRoles = computed(() => page.props.user_roles || []);
 const isMedico = computed(() => userRoles.value.includes('medico'));
 </script>
 
@@ -14,7 +14,7 @@ const isMedico = computed(() => userRoles.value.includes('medico'));
         <Sidebar />
 
         <div class="flex-1 flex flex-col overflow-hidden">
-            
+
             <header class="h-16 bg-white border-b flex items-center justify-between px-6">
                 <h2 class="font-semibold text-xl text-gray-800">
                     Dashboard
@@ -25,9 +25,9 @@ const isMedico = computed(() => userRoles.value.includes('medico'));
             </header>
 
             <main class="flex-1 overflow-y-auto p-6">
-                
+
                 <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg p-8">
-                    
+
                     <div v-if="isMedico">
                         <h1 class="text-3xl font-bold text-blue-600 mb-4">¡Bienvenido, Dr. {{ $page.props.auth.user.name }}!</h1>
                         <p class="text-gray-600">Aquí podrás ver un resumen de tus citas de hoy, ingresos y pacientes críticos.</p>
