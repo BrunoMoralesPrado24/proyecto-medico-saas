@@ -6,6 +6,7 @@ import Sidebar from '@/Components/Sidebar.vue';
 
 const props = defineProps({
     patient: Object,
+    consultations: Array, // <-- Faltaba esto
 });
 
 // Extraemos el historial si existe, si no, inicializamos un objeto vacío
@@ -61,7 +62,9 @@ const submit = () => {
 
         <main class="flex-1 overflow-y-auto">
             <div class="max-w-5xl mx-auto py-8 sm:px-6 lg:px-8">
-                
+                <Link :href="route('consultations.create', patient.id)" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold shadow-md hover:bg-blue-700 transition transform hover:-translate-y-0.5 text-sm flex items-center">
+                    + Iniciar Consulta Hoy
+                </Link>
                 <div class="bg-white shadow-sm rounded-2xl p-6 mb-6 flex flex-col sm:flex-row sm:items-center justify-between border-l-4 border-blue-600">
                     <div class="mb-4 sm:mb-0">
                         <h1 class="text-2xl font-bold text-gray-900">{{ patient.nombre }}</h1>
@@ -153,6 +156,64 @@ const submit = () => {
                             </button>
                         </div>
                     </form>
+                    <div class="bg-white shadow-xl rounded-2xl overflow-hidden mb-12 mt-8">
+                        <div class="px-6 py-4 border-b border-gray-100 bg-indigo-50 flex justify-between items-center">
+                            <h2 class="text-lg font-bold text-indigo-900 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                Historial de Consultas
+                            </h2>
+                            <span class="bg-indigo-200 text-indigo-800 text-xs font-bold px-2 py-1 rounded-full">{{ consultations?.length || 0 }} Registros</span>
+                        </div>
+                        
+                        <div class="p-8">
+                            <div v-if="consultations && consultations.length > 0" class="relative space-y-8">
+                                <div class="absolute top-4 bottom-4 left-6 w-0.5 bg-gray-200 hidden sm:block"></div>
+                            
+                                <div v-for="consulta in consultations" :key="consulta.id" class="relative flex flex-col sm:flex-row gap-6">
+                                    <div class="hidden sm:flex relative z-10 flex-shrink-0 w-12 h-12 bg-white border-4 border-indigo-100 text-indigo-600 rounded-full items-center justify-center shadow-sm">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    </div>
+                                    
+                                    <div class="flex-1 bg-white rounded-xl p-6 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-3">
+                                            <div>
+                                                <h3 class="font-bold text-gray-900 text-lg">Consulta General</h3>
+                                                <span class="text-sm font-medium text-gray-500 block mt-1 sm:hidden">
+                                                    {{ new Date(consulta.created_at).toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
+                                                </span>
+                                            </div>
+                                            <span class="hidden sm:inline-block text-sm font-medium text-gray-500 bg-gray-50 px-3 py-1 rounded-full border border-gray-200">
+                                                {{ new Date(consulta.created_at).toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) }}
+                                            </span>
+                                        </div>
+                                        
+                                        <p class="text-sm text-gray-600 mb-4 bg-gray-50 p-3 rounded-lg border border-gray-100 italic">
+                                            <strong class="not-italic text-gray-800">Motivo:</strong> {{ consulta.motivo_consulta }}
+                                        </p>
+                                        
+                                        <div class="flex justify-between items-center pt-4 border-t border-gray-100">
+                                            <span class="text-xs font-bold text-gray-500 flex items-center uppercase tracking-wider">
+                                                <svg class="w-4 h-4 mr-1 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                                Dr. {{ consulta.doctor?.name || 'No especificado' }}
+                                            </span>
+                                            <Link :href="route('consultations.show', { patient: patient.id, consultation: consulta.id })" class="text-sm font-bold text-indigo-600 hover:text-indigo-800 flex items-center transition bg-indigo-50 px-3 py-1.5 rounded-lg">
+                                                Ver Nota Clínica
+                                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                            </Link>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div v-else class="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                                <div class="mx-auto w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-gray-100">
+                                    <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                </div>
+                                <h3 class="text-lg font-bold text-gray-800">No hay consultas registradas</h3>
+                                <p class="mt-2 text-gray-500 text-sm max-w-md mx-auto">Cuando inicies una nueva consulta y guardes el formato SOAP, aparecerá aquí en el historial cronológico.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </main>
