@@ -74,6 +74,7 @@ const submit = () => {
             <div>
                 <InputLabel for="name" value="Nombre Completo" />
                 <TextInput id="name" v-model="form.name" type="text" class="mt-1 block w-full" required autofocus
+                    pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$" title="Solo se permiten letras y espacios" maxlength="100"
                     autocomplete="name" />
                 <InputError class="mt-2" :message="form.errors.name" />
             </div>
@@ -87,14 +88,9 @@ const submit = () => {
 
             <div class="mt-4">
                 <InputLabel for="curp" value="CURP" />
-                <TextInput
-                    id="curp"
-                    v-model="form.curp"
-                    type="text"
-                    class="mt-1 block w-full uppercase"
-                    required
-                    maxlength="18"
-                />
+                <TextInput id="curp" v-model="form.curp" type="text" class="mt-1 block w-full uppercase" required
+                    pattern="^[a-zA-Z]{4}\d{6}[hHmM][a-zA-Z]{5}[a-zA-Z\d]\d$" title="Debe ser un CURP válido de 18 caracteres"
+                    maxlength="18" />
                 <InputError class="mt-2" :message="form.errors.curp" />
             </div>
 
@@ -112,57 +108,42 @@ const submit = () => {
                 <InputError class="mt-2" :message="form.errors.password_confirmation" />
             </div>
 
-            <div v-if="form.role_type === 'medico'" class="mt-6 p-4 border border-blue-200 bg-blue-50 rounded-xl space-y-4">
+            <div v-if="form.role_type === 'medico'"
+                class="mt-6 p-4 border border-blue-200 bg-blue-50 rounded-xl space-y-4">
                 <h3 class="font-bold text-blue-800 text-sm">Datos Profesionales y de la Clínica</h3>
 
                 <div>
                     <InputLabel for="clues" value="CLUES de la Clínica (11 caracteres)" />
-                    <TextInput
-                        id="clues"
-                        v-model="form.clues"
-                        type="text"
+                    <TextInput id="clues" v-model="form.clues" type="text"
                         class="mt-1 block w-full border-blue-300 focus:border-blue-500 focus:ring-blue-500 uppercase"
-                        placeholder="Ej. MCSSA012345"
-                        maxlength="11"
-                        :required="form.role_type === 'medico'"
-                    />
+                        placeholder="Ej. MCSSA012345" pattern="^[a-zA-Z]{5}\d{6}$"
+                        title="Formato CLUES: 5 letras seguidas de 6 números (Ej. MCSSA012345)" maxlength="11"
+                        :required="form.role_type === 'medico'" />
                     <InputError class="mt-2" :message="form.errors.clues" />
                 </div>
 
                 <div>
                     <InputLabel for="clinic_name" value="Nombre de la Clínica" />
-                    <TextInput
-                        id="clinic_name"
-                        v-model="form.clinic_name"
-                        type="text"
+                    <TextInput id="clinic_name" v-model="form.clinic_name" type="text"
                         class="mt-1 block w-full border-blue-300 focus:border-blue-500 focus:ring-blue-500"
                         placeholder="Solo se usará si la CLUES es nueva en el sistema"
-                        :required="form.role_type === 'medico'"
-                    />
+                        :required="form.role_type === 'medico'" />
                     <InputError class="mt-2" :message="form.errors.clinic_name" />
                 </div>
 
                 <div>
                     <InputLabel for="cedula_profesional" value="Cédula Profesional" />
-                    <TextInput
-                        id="cedula_profesional"
-                        v-model="form.cedula_profesional"
-                        type="text"
+                    <TextInput id="cedula_profesional" v-model="form.cedula_profesional" type="text"
                         class="mt-1 block w-full border-blue-300 focus:border-blue-500 focus:ring-blue-500"
-                        :required="form.role_type === 'medico'"
-                    />
+                        :required="form.role_type === 'medico'" />
                     <InputError class="mt-2" :message="form.errors.cedula_profesional" />
                 </div>
 
                 <div>
                     <InputLabel for="universidad_egreso" value="Universidad de Egreso" />
-                    <TextInput
-                        id="universidad_egreso"
-                        v-model="form.universidad_egreso"
-                        type="text"
+                    <TextInput id="universidad_egreso" v-model="form.universidad_egreso" type="text"
                         class="mt-1 block w-full border-blue-300 focus:border-blue-500 focus:ring-blue-500"
-                        :required="form.role_type === 'medico'"
-                    />
+                        :required="form.role_type === 'medico'" />
                     <InputError class="mt-2" :message="form.errors.universidad_egreso" />
                 </div>
             </div>
@@ -173,7 +154,11 @@ const submit = () => {
                         <Checkbox id="terms" v-model:checked="form.terms" name="terms" required />
 
                         <div class="ms-2">
-                            Acepto los <a target="_blank" :href="route('terms.show')" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Términos y Condiciones</a> y la <a target="_blank" :href="route('policy.show')" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Política de Privacidad</a>
+                            Acepto los <a target="_blank" :href="route('terms.show')"
+                                class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Términos
+                                y Condiciones</a> y la <a target="_blank" :href="route('policy.show')"
+                                class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Política
+                                de Privacidad</a>
                         </div>
                     </div>
                     <InputError class="mt-2" :message="form.errors.terms" />
@@ -181,11 +166,13 @@ const submit = () => {
             </div>
 
             <div class="flex items-center justify-end mt-6">
-                <Link :href="route('login')" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <Link :href="route('login')"
+                    class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                     ¿Ya tienes cuenta?
                 </Link>
 
-                <PrimaryButton class="ms-4 px-6 py-2 text-base" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                <PrimaryButton class="ms-4 px-6 py-2 text-base" :class="{ 'opacity-25': form.processing }"
+                    :disabled="form.processing">
                     Crear Cuenta
                 </PrimaryButton>
             </div>

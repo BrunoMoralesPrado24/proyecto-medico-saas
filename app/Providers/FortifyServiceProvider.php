@@ -13,6 +13,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Laravel\Fortify\Actions\RedirectIfTwoFactorAuthenticatable;
 use Laravel\Fortify\Fortify;
+use Laravel\Fortify\Contracts\RegisterResponse;
+use Illuminate\Support\Facades\Auth;
 
 class FortifyServiceProvider extends ServiceProvider
 {
@@ -43,6 +45,21 @@ class FortifyServiceProvider extends ServiceProvider
 
         RateLimiter::for('two-factor', function (Request $request) {
             return Limit::perMinute(5)->by($request->session()->get('login.id'));
+        });
+
+        // ====================================================
+        // INTERCEPTOR: Evitar auto-login después del registro
+        // ====================================================
+        $this->app->singleton(RegisterResponse::class, function () {
+            // Fortify intentó iniciar sesión por debajo del agua, así que la cerramos inmediatamente.
+            Auth::logout();
+
+            // Limpiamos cualquier rastro de la sesión
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
+
+            // Los redirigimos a la vista de login
+            return redirect()->route('login')->with('status', '¡Tu cuenta ha sido creada con éxito! Por favor, inicia sesión.');
         });
     }
 }
