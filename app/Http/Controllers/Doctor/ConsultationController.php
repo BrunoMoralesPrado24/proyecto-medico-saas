@@ -8,6 +8,7 @@ use App\Models\Patient;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use App\Models\VitalSign;
 
 class ConsultationController extends Controller
 {
@@ -41,54 +42,67 @@ class ConsultationController extends Controller
 
     public function store(Request $request, Patient $patient)
     {
-        $clinicId = session('active_clinic_id');
-        abort_if(!$patient->clinics()->where('clinic_id', $clinicId)->exists(), 403, 'Acceso denegado');
+        // 1. VALIDACIÓN MAESTRA (Las reglas de T9 + Las reglas de T8)
+        $validated = $request->validate([
+            // Signos Vitales (Tu mundo - Opcionales por si el doc no los toma)
+            'peso' => 'nullable|numeric|min:1|max:300',
+            'talla' => 'nullable|numeric|min:0.4|max:3.0',
+            'presion_sistolica' => 'nullable|integer|min:50|max:250',
+            'presion_diastolica' => 'nullable|integer|min:30|max:150',
+            'frecuencia_cardiaca' => 'nullable|integer|min:30|max:220',
+            'frecuencia_respiratoria' => 'nullable|integer|min:10|max:60',
+            'temperatura' => 'nullable|numeric|min:34|max:42',
+            'oxigenacion' => 'nullable|integer|min:50|max:100',
 
-        $request->validate([
-            'peso' => 'nullable|string|max:50',
-            'talla' => 'nullable|string|max:50',
-            'temperatura' => 'nullable|string|max:50',
-            'presion_arterial' => 'nullable|string|max:50',
-            'frecuencia_cardiaca' => 'nullable|string|max:50',
-            'frecuencia_respiratoria' => 'nullable|string|max:50',
-            'saturacion_oxigeno' => 'nullable|string|max:50',
-            
-            'motivo_consulta' => 'required|string', // Obligatorio por lógica básica
+            // SOAP (El mundo de Paco - Motivo es obligatorio)
+            'motivo_consulta' => 'required|string',
             'exploracion_fisica' => 'nullable|string',
             'diagnostico' => 'nullable|string',
             'tratamiento' => 'nullable|string',
         ]);
 
+        $clinicId = session('active_clinic_id');
+
+        // 2. GUARDAR SIGNOS VITALES (Si el doctor capturó al menos el peso o la presión)
+        if ($request->filled('peso') || $request->filled('presion_sistolica')) {
+            VitalSign::create([
+                'patient_id' => $patient->id,
+                'clinic_id' => $clinicId,
+                'peso' => $request->peso,
+                'talla' => $request->talla,
+                'presion_sistolica' => $request->presion_sistolica,
+                'presion_diastolica' => $request->presion_diastolica,
+                'frecuencia_cardiaca' => $request->frecuencia_cardiaca,
+                'frecuencia_respiratoria' => $request->frecuencia_respiratoria,
+                'temperatura' => $request->temperatura,
+                'oxigenacion' => $request->oxigenacion,
+            ]);
+        }
+
+        // 3. GUARDAR CONSULTA SOAP (Dejando vacías las columnas viejas de Paco)
         Consultation::create([
             'patient_id' => $patient->id,
             'clinic_id' => $clinicId,
-            'user_id' => Auth::id(), // Registramos al doctor
-            
-            'peso' => $request->peso,
-            'talla' => $request->talla,
-            'temperatura' => $request->temperatura,
-            'presion_arterial' => $request->presion_arterial,
-            'frecuencia_cardiaca' => $request->frecuencia_cardiaca,
-            'frecuencia_respiratoria' => $request->frecuencia_respiratoria,
-            'saturacion_oxigeno' => $request->saturacion_oxigeno,
-
+            'user_id' => auth()->id(),
+            // Guardamos solo el texto encriptado
             'motivo_consulta' => $request->motivo_consulta,
             'exploracion_fisica' => $request->exploracion_fisica,
             'diagnostico' => $request->diagnostico,
             'tratamiento' => $request->tratamiento,
         ]);
 
+        // 4. REDIRECCIONAR AL EXPEDIENTE CON ÉXITO
         return redirect()->route('medical-records.show', $patient->id)
-                         ->with('message', 'Nota médica guardada correctamente.');
+                         ->with('success', 'Consulta firmada y signos vitales registrados con éxito.');
     }
 
     public function show(Patient $patient, Consultation $consultation)
     {
         $clinicId = session('active_clinic_id');
-        
+
         // 1. Verificamos que el paciente pertenezca a la clínica actual
         abort_if(!$patient->clinics()->where('clinic_id', $clinicId)->exists(), 403, 'Acceso denegado');
-        
+
         // 2. Verificamos que esta consulta realmente sea de este paciente
         abort_if($consultation->patient_id !== $patient->id, 404, 'Consulta no encontrada para este paciente');
 
