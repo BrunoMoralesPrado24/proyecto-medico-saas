@@ -5,15 +5,16 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 // 1. IMPORTACIONES LIMPIAS:
-// Traemos los controladores aquí arriba para no tener que escribir 
+// Traemos los controladores aquí arriba para no tener que escribir
 // "App\Http\Controllers\Doctor\..." en cada línea de abajo.
 use App\Http\Controllers\Doctor\ClinicSelectionController;
 use App\Http\Controllers\Doctor\PatientController;
 use App\Http\Controllers\Doctor\MedicalRecordController;
 use App\Http\Controllers\Doctor\ConsultationController;
-use App\Http\Middleware\EnsureActiveClinic; 
+use App\Http\Middleware\EnsureActiveClinic;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Http\Controllers\Doctor\AppointmentController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -36,12 +37,21 @@ Route::middleware([
     'verified',
 ])->group(function () {
 
+    // 🚦 CONTROLADOR DE TRÁFICO (El guardia que faltaba)
+    // Atrapa a los que vienen del Login o Registro buscando "/dashboard"
+    Route::get('/dashboard', function () {
+        if (auth()->user()->hasRole('medico')) {
+            return redirect()->route('dashboard'); // Te manda a /doctor/dashboard
+        }
+        // A futuro para pacientes: return redirect('/paciente/dashboard');
+        abort(403, 'Rol no reconocido');
+    });
     // ==========================================
     // ÁREA DEL MÉDICO (Prefijo URL: /doctor/...)
     // ==========================================
     Route::prefix('doctor')->group(function () {
 
-        // 1. Rutas de Selección de Clínica 
+        // 1. Rutas de Selección de Clínica
         // URLs: /doctor/select-clinic | Nombres: clinics.select
         Route::get('/select-clinic', [ClinicSelectionController::class, 'select'])->name('clinics.select');
         Route::post('/select-clinic', [ClinicSelectionController::class, 'set'])->name('clinics.set');
@@ -57,20 +67,21 @@ Route::middleware([
             // RUTAS DE PACIENTES
             // URL: /doctor/patients | Nombres cortos: patients.index, patients.create, etc.
             Route::resource('patients', PatientController::class);
-            
+
             //MÓDULO: Expedientes Clínicos (Santuario Médico)
             Route::get('/medical-records', [MedicalRecordController::class, 'index'])->name('medical-records.index');
             Route::get('/medical-records/{patient}', [MedicalRecordController::class, 'show'])->name('medical-records.show');
             Route::put('/medical-records/{patient}', [MedicalRecordController::class, 'update'])->name('medical-records.update');
-            
+
             // RUTAS DE CONSULTAS
-            Route::get('/consultations', [ConsultationController::class, 'index'])->name('consultations.index'); 
+            Route::get('/consultations', [ConsultationController::class, 'index'])->name('consultations.index');
             Route::get('/patients/{patient}/consultations/create', [ConsultationController::class, 'create'])->name('consultations.create');
             Route::post('/patients/{patient}/consultations', [ConsultationController::class, 'store'])->name('consultations.store');
             Route::get('/patients/{patient}/consultations/{consultation}', [ConsultationController::class, 'show'])->name('consultations.show');
 
             // *Aquí irán las futuras rutas del doctor*
-            // Route::resource('appointments', AppointmentController::class);
+             Route::resource('appointments', AppointmentController::class);
+
         });
     });
 
