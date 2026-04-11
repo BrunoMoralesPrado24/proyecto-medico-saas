@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Patient;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\Consultation;
 
 class MedicalRecordController extends Controller
 {
@@ -38,11 +39,19 @@ class MedicalRecordController extends Controller
         $clinicId = session('active_clinic_id');
         abort_if(!$patient->clinics()->where('clinic_id', $clinicId)->exists(), 403, 'Acceso denegado');
 
-        // Cargamos al paciente CON su historial médico (si es que ya tiene uno)
+        // Cargamos al paciente CON su historial médico permanente
         $patient->load('medicalHistory');
 
+        // Traemos TODAS sus consultas en esta clínica, de la más nueva a la más vieja
+        $consultations = Consultation::with('doctor:id,name')
+            ->where('patient_id', $patient->id)
+            ->where('clinic_id', $clinicId)
+            ->latest()
+            ->get();
+
         return Inertia::render('Doctor/MedicalRecords/Show', [
-            'patient' => $patient
+            'patient' => $patient,
+            'consultations' => $consultations // <-- Esto se había borrado
         ]);
     }
 
