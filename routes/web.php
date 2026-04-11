@@ -15,6 +15,7 @@ use App\Http\Middleware\EnsureActiveClinic;
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Http\Controllers\Doctor\AppointmentController;
+use App\Http\Controllers\Doctor\VitalSignController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -81,6 +82,9 @@ Route::middleware([
 
             // *Aquí irán las futuras rutas del doctor*
              Route::resource('appointments', AppointmentController::class);
+
+            // MÓDULO: Signos Vitales
+            Route::post('/patients/{patient}/vital-signs', [VitalSignController::class, 'store'])->name('vital-signs.store');
 
         });
     });

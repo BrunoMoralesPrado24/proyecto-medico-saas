@@ -21,19 +21,35 @@ class CreateNewUser implements CreatesNewUsers
     {
         // 1. Validaciones con reglas estrictas para CURP y CLUES
         Validator::make($input, [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'curp' => ['required', 'string', 'size:18', 'unique:users'], // <-- Obligatorio para todos (18 caracteres)
+            // strip_tags mata cualquier intento de inyección de JavaScript (XSS)
+            'name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/'],
+            'email' => ['required', 'string', 'email:rfc,dns', 'max:255', 'unique:users'],
+
+            // Regex oficial para el CURP
+            'curp' => ['required', 'string', 'size:18', 'regex:/^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z\d]\d$/i', 'unique:users'],
+
             'role_type' => ['required', 'string', 'in:medico,paciente_titular'],
             'password' => $this->passwordRules(),
-            'terms' => Jetstream::hasTermsAndPrivacyPolicyFeature() ? ['accepted', 'required'] : '',
 
-            // Campos extra SOLO si es médico
+            // Regex para CLUES y Cédula
             'clinic_name' => [Rule::requiredIf($input['role_type'] === 'medico'), 'nullable', 'string', 'max:255'],
-            'clues' => [Rule::requiredIf($input['role_type'] === 'medico'), 'nullable', 'string', 'size:11'], // <-- CLUES (11 caracteres)
-            'cedula_profesional' => [Rule::requiredIf($input['role_type'] === 'medico'), 'nullable', 'string', 'max:20'],
+            'clues' => [Rule::requiredIf($input['role_type'] === 'medico'), 'nullable', 'string', 'size:11', 'regex:/^[A-Z]{5}\d{6}$/i'],
+            'cedula_profesional' => [Rule::requiredIf($input['role_type'] === 'medico'), 'nullable', 'string', 'max:20', 'alpha_num'],
             'universidad_egreso' => [Rule::requiredIf($input['role_type'] === 'medico'), 'nullable', 'string', 'max:255'],
+        ], [
+            // MENSAJES PERSONALIZADOS POR SI INTENTAN HACKEAR
+            'name.regex' => 'El nombre no puede contener números ni caracteres especiales.',
+            'curp.regex' => 'El formato del CURP no es válido.',
+            'clues.regex' => 'El formato de la CLUES no es válido (Ej. MCSSA012345).',
+            'cedula_profesional.alpha_num' => 'La cédula solo debe contener letras y números.',
         ])->validate();
+
+        // LIMPIEZA FINAL antes de guardar (Previene inyección XSS)
+        $input['name'] = strip_tags($input['name']);
+        $input['clinic_name'] = isset($input['clinic_name']) ? strip_tags($input['clinic_name']) : null;
+
+        $input['curp'] = strtoupper($input['curp']);
+        $input['clues'] = isset($input['clues']) ? strtoupper($input['clues']) : null;
 
         // 2. Transacción de Base de Datos
         return DB::transaction(function () use ($input) {
