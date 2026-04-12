@@ -100,19 +100,23 @@ class ConsultationController extends Controller
     {
         $clinicId = session('active_clinic_id');
 
-        // 1. Verificamos que el paciente pertenezca a la clínica actual
         abort_if(!$patient->clinics()->where('clinic_id', $clinicId)->exists(), 403, 'Acceso denegado');
+        abort_if($consultation->patient_id !== $patient->id, 404, 'Consulta no encontrada');
 
-        // 2. Verificamos que esta consulta realmente sea de este paciente
-        abort_if($consultation->patient_id !== $patient->id, 404, 'Consulta no encontrada para este paciente');
-
-        // 3. Cargamos los datos extra que necesitamos mostrar
         $patient->load('medicalHistory');
-        $consultation->load('doctor:id,name'); // Para saber qué doctor la firmó
+        $consultation->load('doctor:id,name');
+
+        // BUSCAMOS LOS SIGNOS VITALES DEL MISMO DÍA (La integración con lo de Bruno)
+        $vitalSign = VitalSign::where('patient_id', $patient->id)
+            ->where('clinic_id', $clinicId)
+            ->whereDate('created_at', $consultation->created_at->toDateString())
+            ->latest()
+            ->first();
 
         return Inertia::render('Doctor/Consultations/Show', [
             'patient' => $patient,
-            'consultation' => $consultation
+            'consultation' => $consultation,
+            'vitalSign' => $vitalSign // Mandamos los signos vitales a la vista
         ]);
     }
 }
