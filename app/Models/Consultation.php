@@ -14,7 +14,6 @@ class Consultation extends Model
 
     protected $fillable = [
         'patient_id', 'clinic_id', 'user_id',
-        'peso', 'talla', 'temperatura', 'presion_arterial', 'frecuencia_cardiaca', 'frecuencia_respiratoria', 'saturacion_oxigeno',
         'motivo_consulta', 'exploracion_fisica', 'diagnostico', 'tratamiento'
     ];
 

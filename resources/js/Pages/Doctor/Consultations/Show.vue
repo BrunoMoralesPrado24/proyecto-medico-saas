@@ -6,6 +6,7 @@ import Sidebar from '@/Components/Sidebar.vue';
 const props = defineProps({
     patient: Object,
     consultation: Object,
+    vitalSign: Object, 
 });
 
 const edad = computed(() => {
@@ -82,15 +83,14 @@ const fechaFormateada = computed(() => {
                         </div>
                     </div>
 
-                    <div v-if="consultation.peso || consultation.talla || consultation.temperatura || consultation.presion_arterial || consultation.frecuencia_cardiaca" 
-                         class="px-8 py-5 border-b border-gray-100 bg-gray-50 flex flex-wrap gap-x-8 gap-y-4">
-                        <div v-if="consultation.peso" class="flex flex-col"><span class="text-xs text-gray-500 uppercase">Peso</span><span class="text-sm font-bold text-gray-800">{{ consultation.peso }} kg</span></div>
-                        <div v-if="consultation.talla" class="flex flex-col"><span class="text-xs text-gray-500 uppercase">Talla</span><span class="text-sm font-bold text-gray-800">{{ consultation.talla }} cm</span></div>
-                        <div v-if="consultation.temperatura" class="flex flex-col"><span class="text-xs text-gray-500 uppercase">Temp</span><span class="text-sm font-bold text-gray-800">{{ consultation.temperatura }} °C</span></div>
-                        <div v-if="consultation.presion_arterial" class="flex flex-col"><span class="text-xs text-gray-500 uppercase">TA</span><span class="text-sm font-bold text-gray-800">{{ consultation.presion_arterial }}</span></div>
-                        <div v-if="consultation.frecuencia_cardiaca" class="flex flex-col"><span class="text-xs text-gray-500 uppercase">FC</span><span class="text-sm font-bold text-gray-800">{{ consultation.frecuencia_cardiaca }} lpm</span></div>
-                        <div v-if="consultation.frecuencia_respiratoria" class="flex flex-col"><span class="text-xs text-gray-500 uppercase">FR</span><span class="text-sm font-bold text-gray-800">{{ consultation.frecuencia_respiratoria }} rpm</span></div>
-                        <div v-if="consultation.saturacion_oxigeno" class="flex flex-col"><span class="text-xs text-gray-500 uppercase">SpO2</span><span class="text-sm font-bold text-gray-800">{{ consultation.saturacion_oxigeno }} %</span></div>
+                    <div v-if="vitalSign" class="px-8 py-5 border-b border-gray-100 bg-gray-50 flex flex-wrap gap-x-8 gap-y-4">
+                        <div v-if="vitalSign.peso" class="flex flex-col"><span class="text-xs text-gray-500 uppercase">Peso</span><span class="text-sm font-bold text-gray-800">{{ vitalSign.peso }} kg</span></div>
+                        <div v-if="vitalSign.talla" class="flex flex-col"><span class="text-xs text-gray-500 uppercase">Talla</span><span class="text-sm font-bold text-gray-800">{{ vitalSign.talla }} m</span></div>
+                        <div v-if="vitalSign.temperatura" class="flex flex-col"><span class="text-xs text-gray-500 uppercase">Temp</span><span class="text-sm font-bold text-gray-800">{{ vitalSign.temperatura }} °C</span></div>
+                        <div v-if="vitalSign.presion_sistolica && vitalSign.presion_diastolica" class="flex flex-col"><span class="text-xs text-gray-500 uppercase">TA</span><span class="text-sm font-bold text-gray-800">{{ vitalSign.presion_sistolica }}/{{ vitalSign.presion_diastolica }}</span></div>
+                        <div v-if="vitalSign.frecuencia_cardiaca" class="flex flex-col"><span class="text-xs text-gray-500 uppercase">FC</span><span class="text-sm font-bold text-gray-800">{{ vitalSign.frecuencia_cardiaca }} lpm</span></div>
+                        <div v-if="vitalSign.frecuencia_respiratoria" class="flex flex-col"><span class="text-xs text-gray-500 uppercase">FR</span><span class="text-sm font-bold text-gray-800">{{ vitalSign.frecuencia_respiratoria }} rpm</span></div>
+                        <div v-if="vitalSign.oxigenacion" class="flex flex-col"><span class="text-xs text-gray-500 uppercase">SpO2</span><span class="text-sm font-bold text-gray-800">{{ vitalSign.oxigenacion }} %</span></div>
                     </div>
 
                     <div class="px-8 py-8 space-y-8 bg-white">
