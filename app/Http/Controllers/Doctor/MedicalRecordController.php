@@ -39,19 +39,19 @@ class MedicalRecordController extends Controller
         $clinicId = session('active_clinic_id');
         abort_if(!$patient->clinics()->where('clinic_id', $clinicId)->exists(), 403, 'Acceso denegado');
 
-        // Cargamos al paciente CON su historial médico permanente
+        // 1. Cargamos al paciente y su historial
         $patient->load('medicalHistory');
 
-        // Traemos TODAS sus consultas en esta clínica, de la más nueva a la más vieja
+        // 2. Traemos las consultas PAGINADAS (5 por página)
         $consultations = Consultation::with('doctor:id,name')
             ->where('patient_id', $patient->id)
             ->where('clinic_id', $clinicId)
             ->latest()
-            ->get();
+            ->paginate(5); // <-- Aquí aplicamos la paginación
 
         return Inertia::render('Doctor/MedicalRecords/Show', [
             'patient' => $patient,
-            'consultations' => $consultations // <-- Esto se había borrado
+            'consultations' => $consultations // Mandamos el objeto paginado
         ]);
     }
 
