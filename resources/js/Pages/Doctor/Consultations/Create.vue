@@ -9,7 +9,7 @@ const props = defineProps({
 });
 
 const form = useForm({
-    // Signos Vitales y Somatometría (Alineado con tu T9 y la NOM)
+    // Signos Vitales y Somatometría
     peso: '',
     talla: '',
     presion_sistolica: '',
@@ -19,11 +19,14 @@ const form = useForm({
     temperatura: '',
     oxigenacion: '',
 
-    // Formato SOAP (La parte de Paco - T8)
+    // Formato SOAP
     motivo_consulta: '',
     exploracion_fisica: '',
     diagnostico: '',
-    tratamiento: '',
+    tratamiento: '', // Lo usaremos para indicaciones generales no farmacológicas
+    
+    // 💊 NUEVO: Array dinámico para el Recetario Electrónico
+    medicamentos: [],
 });
 
 // Control del Panel Lateral (Quick View)
@@ -38,16 +41,33 @@ const edad = computed(() => {
     return e;
 });
 
+// Funciones para manipular la receta
+const agregarMedicamento = () => {
+    form.medicamentos.push({
+        medicamento: '',
+        dosis: '',
+        frecuencia: '',
+        duracion: '',
+        indicaciones_extra: ''
+    });
+};
+
+const eliminarMedicamento = (index) => {
+    form.medicamentos.splice(index, 1);
+};
+
 const submit = () => {
-    // 🛑 INTERCEPTOR: Normalización de Talla
-    // Si la talla es mayor a 3, es lógicamente imposible que sean metros.
-    // Significa que escribieron centímetros (ej. 170). Lo dividimos entre 100.
+    // Interceptor: Normalización de Talla
     if (form.talla && parseFloat(form.talla) > 3) {
         form.talla = (parseFloat(form.talla) / 100).toFixed(2);
     }
 
-    // Ahora sí, mandamos la información limpia al servidor
-    form.post(route('consultations.store', props.patient.id));
+    form.post(route('consultations.store', props.patient.id), {
+        preserveScroll: true, // Evita que la pantalla brinque hacia arriba
+        /*onError: (errors) => {
+            console.error("ERRORES DEL BACKEND:", errors); // Ahora sí lo verás en F12
+        }*/
+    });
 };
 </script>
 
@@ -115,19 +135,88 @@ const submit = () => {
                                 <textarea v-model="form.diagnostico" rows="3" placeholder="Probable cuadro de..." class="w-full rounded-xl border-gray-300 focus:border-blue-500 focus:ring-blue-500 shadow-sm transition"></textarea>
                             </div>
 
-                            <div class="bg-indigo-50 -mx-6 px-6 py-6 border-t border-indigo-100 rounded-b-xl">
-                                <label class="block text-sm font-bold text-indigo-900">Plan / Tratamiento (P)</label>
-                                <p class="text-xs text-indigo-700 mb-2 font-medium">Medicamentos, indicaciones, estudios solicitados y próxima cita.</p>
-                                <textarea v-model="form.tratamiento" rows="6" placeholder="1. Paracetamol 500mg..." class="w-full rounded-xl border-indigo-300 bg-white focus:border-indigo-500 focus:ring-indigo-500 shadow-md transition"></textarea>
+                            <div class="bg-indigo-50 -mx-6 px-6 py-6 border-t border-indigo-100">
+                                <label class="block text-sm font-bold text-indigo-900">Plan / Indicaciones Generales (P)</label>
+                                <p class="text-xs text-indigo-700 mb-2 font-medium">Reposo, dieta, estudios solicitados y próxima cita (No incluir fármacos aquí).</p>
+                                <textarea v-model="form.tratamiento" rows="3" placeholder="1. Dieta blanda. 2. Reposo por 3 días..." class="w-full rounded-xl border-indigo-300 bg-white focus:border-indigo-500 focus:ring-indigo-500 shadow-sm transition"></textarea>
+                            </div>
+                            
+                            <div class="bg-emerald-50 -mx-6 px-6 py-6 border-t border-emerald-100 rounded-b-xl">
+                                <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-6 gap-3">
+                                    <div>
+                                        <label class="block text-sm font-bold text-emerald-900 flex items-center">
+                                            <svg class="w-5 h-5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                                            Receta Médica (Fármacos)
+                                        </label>
+                                        <p class="text-xs text-emerald-700 font-medium">Estos medicamentos conformarán el PDF oficial de la receta.</p>
+                                    </div>
+                                    <button type="button" @click="agregarMedicamento" class="px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-lg hover:bg-emerald-700 transition shadow-sm flex items-center transform hover:-translate-y-0.5">
+                                        + Agregar Fármaco
+                                    </button>
+                                </div>
+
+                                <div v-if="form.medicamentos.length > 0" class="space-y-4">
+                                    <div v-for="(med, index) in form.medicamentos" :key="index" class="bg-white p-5 rounded-xl border border-emerald-200 shadow-sm relative group transition hover:border-emerald-400">
+                                        
+                                        <button type="button" @click="eliminarMedicamento(index)" class="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition p-1 bg-gray-50 hover:bg-red-50 rounded-md" title="Eliminar medicamento">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                        </button>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 pr-6">
+                                            <div class="md:col-span-12">
+                                                <label class="block text-xs font-bold text-gray-700 mb-1">Medicamento (Sustancia y Presentación) *</label>
+                                                <input type="text" v-model="med.medicamento" placeholder="Ej. Paracetamol 500 mg Tabletas" class="w-full rounded-lg border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 shadow-sm text-sm" required>
+                                            </div>
+                                            
+                                            <div class="md:col-span-3">
+                                                <label class="block text-xs font-bold text-gray-700 mb-1">Dosis *</label>
+                                                <input type="text" v-model="med.dosis" placeholder="Ej. 1 tableta" class="w-full rounded-lg border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 shadow-sm text-sm" required>
+                                            </div>
+                                            
+                                            <div class="md:col-span-4">
+                                                <label class="block text-xs font-bold text-gray-700 mb-1">Frecuencia *</label>
+                                                <input type="text" v-model="med.frecuencia" placeholder="Ej. Cada 8 horas" class="w-full rounded-lg border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 shadow-sm text-sm" required>
+                                            </div>
+                                            
+                                            <div class="md:col-span-5">
+                                                <label class="block text-xs font-bold text-gray-700 mb-1">Duración *</label>
+                                                <input type="text" v-model="med.duracion" placeholder="Ej. Por 5 días" class="w-full rounded-lg border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 shadow-sm text-sm" required>
+                                            </div>
+
+                                            <div class="md:col-span-12">
+                                                <label class="block text-xs font-bold text-gray-700 mb-1">Indicaciones Adicionales (Opcional)</label>
+                                                <input type="text" v-model="med.indicaciones_extra" placeholder="Ej. Tomar junto con los alimentos para evitar irritación gástrica" class="w-full rounded-lg border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 shadow-sm text-sm">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div v-else class="text-center py-8 bg-white bg-opacity-60 rounded-xl border-2 border-dashed border-emerald-200">
+                                    <p class="text-sm text-emerald-600 font-semibold mb-1">No hay medicamentos en la receta</p>
+                                    <p class="text-xs text-gray-500">Haz clic en el botón superior para agregar el primer fármaco.</p>
+                                </div>
                             </div>
 
                         </div>
                     </div>
 
+                    <div v-if="Object.keys(form.errors).length > 0" class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-r-xl shadow-sm">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-bold text-red-800">Faltan datos o hay errores en el formato:</h3>
+                                <ul class="mt-1 text-sm text-red-700 list-disc list-inside">
+                                    <li v-for="(error, key) in form.errors" :key="key">{{ error }}</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
                     <div class="flex justify-end pb-12">
                         <button type="submit" :disabled="form.processing" class="px-8 py-4 bg-gray-900 text-white rounded-xl font-bold text-lg hover:bg-gray-800 transition transform hover:-translate-y-1 shadow-lg flex items-center disabled:opacity-50 disabled:transform-none">
                             <svg v-if="form.processing" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            🔒 Firmar y Guardar Nota
+                            🔒 Firmar Nota y Generar Receta
                         </button>
                     </div>
 

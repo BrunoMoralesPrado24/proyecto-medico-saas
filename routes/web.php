@@ -79,6 +79,7 @@ Route::middleware([
             Route::get('/patients/{patient}/consultations/create', [ConsultationController::class, 'create'])->name('consultations.create');
             Route::post('/patients/{patient}/consultations', [ConsultationController::class, 'store'])->name('consultations.store');
             Route::get('/patients/{patient}/consultations/{consultation}', [ConsultationController::class, 'show'])->name('consultations.show');
+            Route::get('/patients/{patient}/consultations/{consultation}/prescription-pdf', [ConsultationController::class, 'printPrescription'])->name('consultations.prescription.pdf');
 
             // *Aquí irán las futuras rutas del doctor*
              Route::resource('appointments', AppointmentController::class);
