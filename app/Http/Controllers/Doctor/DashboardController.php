@@ -38,9 +38,14 @@ class DashboardController extends Controller
                 ->take(5)
                 ->get()
                 ->map(function ($cita) {
-                    // Truco Senior: Adaptamos los nombres "on the fly" para que Vue los entienda
                     $cita->scheduled_at = $cita->start_time;
                     $cita->motivo = $cita->reason_for_visit;
+
+                    // 🛑 TRUCO SENIOR: Formateamos la hora directo en el servidor
+                    // para que JavaScript no se confunda con la zona horaria.
+                    // 'h:i A' nos dará el formato "12:30 PM"
+                    $cita->hora_formateada = \Carbon\Carbon::parse($cita->start_time)->format('h:i A');
+
                     return $cita;
                 });
         }

@@ -100,7 +100,7 @@ const calcularEdad = (fecha) => {
                                 <tr v-for="cita in proximosPacientes" :key="cita.id" class="hover:bg-blue-50 transition group">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-800 border border-gray-200">
-                                            {{ new Date(cita.scheduled_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) }}
+                                            {{ cita.hora_formateada }}
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
