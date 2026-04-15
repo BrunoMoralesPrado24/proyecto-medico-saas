@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Http\Controllers\Doctor\AppointmentController;
 use App\Http\Controllers\Doctor\VitalSignController;
+use App\Http\Controllers\Doctor\DashboardController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -40,13 +41,7 @@ Route::middleware([
 
     // 🚦 CONTROLADOR DE TRÁFICO (El guardia que faltaba)
     // Atrapa a los que vienen del Login o Registro buscando "/dashboard"
-    Route::get('/dashboard', function () {
-        if (auth()->user()->hasRole('medico')) {
-            return redirect()->route('dashboard'); // Te manda a /doctor/dashboard
-        }
-        // A futuro para pacientes: return redirect('/paciente/dashboard');
-        abort(403, 'Rol no reconocido');
-    });
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     // ==========================================
     // ÁREA DEL MÉDICO (Prefijo URL: /doctor/...)
     // ==========================================

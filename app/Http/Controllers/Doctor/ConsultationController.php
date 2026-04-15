@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Consultation;
 use App\Models\Patient;
 use App\Models\VitalSign;
-use App\Models\Prescription; 
+use App\Models\Prescription;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -101,7 +101,7 @@ class ConsultationController extends Controller
 
         // 4. GENERAR RECETA MÉDICA (Si el doctor agregó medicamentos)
         if (is_array($request->medicamentos) && count($request->medicamentos) > 0) {
-            
+
             // Creamos la receta base (el folio se genera automático en el modelo)
             $prescription = Prescription::create([
                 'consultation_id' => $consultation->id,
@@ -119,9 +119,11 @@ class ConsultationController extends Controller
             }
         }
 
-        // 5. REDIRECCIONAR AL EXPEDIENTE
-        return redirect()->route('medical-records.show', $patient->id)
-                         ->with('success', 'Consulta y receta firmadas con éxito.');
+        // 5. REDIRECCIONAR A LA VISTA DE LA NOTA RECIÉN CREADA
+        return redirect()->route('consultations.show', [
+            'patient' => $patient->id,
+            'consultation' => $consultation->id
+        ])->with('success', 'Consulta y receta firmadas con éxito.');
     }
 
     public function show(Patient $patient, Consultation $consultation)
@@ -132,9 +134,9 @@ class ConsultationController extends Controller
         abort_if($consultation->patient_id !== $patient->id, 404, 'Consulta no encontrada');
 
         $patient->load('medicalHistory');
-        
+
         // Aquí también traemos la receta (si es que existe) y sus ítems
-        $consultation->load(['doctor:id,name', 'prescription.items']); 
+        $consultation->load(['doctor:id,name', 'prescription.items']);
 
         $vitalSign = VitalSign::where('patient_id', $patient->id)
             ->where('clinic_id', $clinicId)
@@ -159,10 +161,10 @@ class ConsultationController extends Controller
         // Cargamos todo lo necesario para el documento legal
         $consultation->load(['doctor', 'prescription.items']);
         $clinic = Clinic::findOrFail($clinicId);
-        
+
         // Buscamos el perfil profesional del doctor (Cédula y Universidad)
         $doctorProfile = Doctor::where('user_id', $consultation->user_id)->first();
-        
+
         // Buscamos los signos vitales de ese día
         $vitalSign = VitalSign::where('patient_id', $patient->id)
             ->where('clinic_id', $clinicId)
