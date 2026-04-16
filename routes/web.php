@@ -57,7 +57,7 @@ Route::middleware([
 
             // URL: /doctor/dashboard | Nombre: dashboard
             Route::get('/dashboard', function () {
-                return Inertia::render('Dashboard');
+                return Inertia::render('Doctor/Dashboard/Dashboard');
             })->name('dashboard');
 
             // RUTAS DE PACIENTES
