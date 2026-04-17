@@ -39,27 +39,29 @@ Route::middleware([
     'verified',
 ])->group(function () {
 
-    // 🚦 CONTROLADOR DE TRÁFICO (El guardia que faltaba)
-    // Atrapa a los que vienen del Login o Registro buscando "/dashboard"
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    // 🚦 CONTROLADOR DE TRÁFICO PRINCIPAL
+    // Atrapa a todos los que inician sesión y deciden su destino
+    Route::get('/dashboard', function () {
+        // Si no hay una clínica activa en la memoria de la sesión, lo obligamos a elegir una
+        if (!session()->has('active_clinic_id')) {
+            return redirect()->route('clinics.select');
+        }
+        // Si ya tiene una clínica activa, le mostramos el Dashboard con sus KPIs
+        return app(\App\Http\Controllers\Doctor\DashboardController::class)->index();
+    })->name('dashboard');
+
     // ==========================================
     // ÁREA DEL MÉDICO (Prefijo URL: /doctor/...)
     // ==========================================
     Route::prefix('doctor')->group(function () {
 
         // 1. Rutas de Selección de Clínica
-        // URLs: /doctor/select-clinic | Nombres: clinics.select
         Route::get('/select-clinic', [ClinicSelectionController::class, 'select'])->name('clinics.select');
         Route::post('/select-clinic', [ClinicSelectionController::class, 'set'])->name('clinics.set');
+        Route::post('/clinics', [ClinicSelectionController::class, 'store'])->name('clinics.store');
 
         // 2. Grupo ULTRA PROTEGIDO (Requiere Clínica Seleccionada)
         Route::middleware([EnsureActiveClinic::class])->group(function () {
-
-            // URL: /doctor/dashboard | Nombre: dashboard
-            Route::get('/dashboard', function () {
-                return Inertia::render('Doctor/Dashboard/Dashboard');
-            })->name('dashboard');
-
             // RUTAS DE PACIENTES
             // URL: /doctor/patients | Nombres cortos: patients.index, patients.create, etc.
             Route::resource('patients', PatientController::class);
@@ -77,11 +79,10 @@ Route::middleware([
             Route::get('/patients/{patient}/consultations/{consultation}/prescription-pdf', [ConsultationController::class, 'printPrescription'])->name('consultations.prescription.pdf');
 
             // *Aquí irán las futuras rutas del doctor*
-             Route::resource('appointments', AppointmentController::class);
+            Route::resource('appointments', AppointmentController::class);
 
             // MÓDULO: Signos Vitales
             Route::post('/patients/{patient}/vital-signs', [VitalSignController::class, 'store'])->name('vital-signs.store');
-
         });
     });
 
