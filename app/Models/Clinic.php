@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 class Clinic extends Model
 {
@@ -31,6 +32,16 @@ class Clinic extends Model
         'estado',
         'clues',
     ];
+
+    protected static function booted()
+    {
+        static::creating(function ($clinic) {
+            // Si nadie le mandó un código, le inventamos uno seguro de 8 caracteres
+            if (empty($clinic->join_code)) {
+                $clinic->join_code = strtoupper(Str::random(8));
+            }
+        });
+    }
 
     /**
      * RELACIÓN: Obtiene el usuario que administra/creó esta clínica.
