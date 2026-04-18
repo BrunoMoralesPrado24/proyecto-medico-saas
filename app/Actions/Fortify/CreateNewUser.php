@@ -19,25 +19,29 @@ class CreateNewUser implements CreatesNewUsers
 
     public function create(array $input): User
     {
-        // 1. Validaciones con reglas estrictas para CURP y CLUES
+        // 1. Validaciones Inteligentes (Condicionales por Rol)
         Validator::make($input, [
-            // strip_tags mata cualquier intento de inyección de JavaScript (XSS)
+            // Reglas Generales (Todos)
             'name' => ['required', 'string', 'max:255', 'regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/'],
             'email' => ['required', 'string', 'email:rfc,dns', 'max:255', 'unique:users'],
-
-            // Regex oficial para el CURP
-            'curp' => ['required', 'string', 'size:18', 'regex:/^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z\d]\d$/i', 'unique:users'],
-
-            'role_type' => ['required', 'string', 'in:medico,paciente_titular'],
             'password' => $this->passwordRules(),
+            'role_type' => ['required', 'string', 'in:medico,paciente_titular'],
 
-            // Regex para CLUES y Cédula
+            // 🔥 Reglas Condicionales (Solo Médicos)
+            'curp' => [
+                Rule::requiredIf($input['role_type'] === 'medico'),
+                'nullable',
+                'string',
+                'size:18',
+                'regex:/^[A-Z]{4}\d{6}[HM][A-Z]{5}[A-Z\d]\d$/i',
+                'unique:users'
+            ],
             'clinic_name' => [Rule::requiredIf($input['role_type'] === 'medico'), 'nullable', 'string', 'max:255'],
             'clues' => [Rule::requiredIf($input['role_type'] === 'medico'), 'nullable', 'string', 'size:11', 'regex:/^[A-Z]{5}\d{6}$/i'],
             'cedula_profesional' => [Rule::requiredIf($input['role_type'] === 'medico'), 'nullable', 'string', 'max:20', 'alpha_num'],
             'universidad_egreso' => [Rule::requiredIf($input['role_type'] === 'medico'), 'nullable', 'string', 'max:255'],
         ], [
-            // MENSAJES PERSONALIZADOS POR SI INTENTAN HACKEAR
+            // Mensajes Personalizados
             'name.regex' => 'El nombre no puede contener números ni caracteres especiales.',
             'curp.regex' => 'El formato del CURP no es válido.',
             'clues.regex' => 'El formato de la CLUES no es válido (Ej. MCSSA012345).',
@@ -46,10 +50,6 @@ class CreateNewUser implements CreatesNewUsers
 
         // LIMPIEZA FINAL antes de guardar (Previene inyección XSS)
         $input['name'] = strip_tags($input['name']);
-        $input['clinic_name'] = isset($input['clinic_name']) ? strip_tags($input['clinic_name']) : null;
-
-        $input['curp'] = strtoupper($input['curp']);
-        $input['clues'] = isset($input['clues']) ? strtoupper($input['clues']) : null;
 
         // 2. Transacción de Base de Datos
         return DB::transaction(function () use ($input) {
@@ -58,23 +58,25 @@ class CreateNewUser implements CreatesNewUsers
             $user = User::create([
                 'name' => $input['name'],
                 'email' => $input['email'],
-                'curp' => strtoupper($input['curp']), // Guardamos en mayúsculas por estándar
+                // 🔥 MAGIA: Si es médico guardamos el CURP, si es paciente guardamos NULL
+                'curp' => $input['role_type'] === 'medico' ? strtoupper($input['curp']) : null,
                 'password' => Hash::make($input['password']),
             ]);
 
-            // B. Asignamos rol
+            // B. Asignamos rol (Spatie Permission)
             $user->assignRole($input['role_type']);
 
             // C. Lógica inteligente para Médicos
             if ($input['role_type'] === 'medico') {
 
-                // LA MAGIA: firstOrCreate
-                // Busca la CLUES. Si existe, trae la clínica. Si NO existe, la crea con el array secundario.
+                $input['clinic_name'] = strip_tags($input['clinic_name']);
+
+                // Busca la CLUES. Si existe, trae la clínica. Si NO existe, la crea.
                 $clinic = Clinic::firstOrCreate(
                     ['clues' => strtoupper($input['clues'])],
                     [
                         'nombre' => $input['clinic_name'],
-                        'admin_id' => $user->id, // El primer doctor en usar esta CLUES se vuelve el admin
+                        'admin_id' => $user->id,
                         'join_code' => strtoupper(Str::random(8)),
                     ]
                 );
@@ -86,10 +88,10 @@ class CreateNewUser implements CreatesNewUsers
                     'universidad_egreso' => $input['universidad_egreso'],
                 ]);
 
-                // Lo unimos a la clínica encontrada (o recién creada)
+                // Lo unimos a la clínica
                 $doctor->clinics()->attach($clinic->id, [
                     'is_active' => true,
-                    'precio_consulta' => 0.00, // Valor por defecto obligatorio de tu tabla
+                    'precio_consulta' => 0.00,
                 ]);
             }
 

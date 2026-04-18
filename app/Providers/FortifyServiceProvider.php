@@ -51,15 +51,20 @@ class FortifyServiceProvider extends ServiceProvider
         // INTERCEPTOR: Evitar auto-login después del registro
         // ====================================================
         $this->app->singleton(RegisterResponse::class, function () {
-            // Fortify intentó iniciar sesión por debajo del agua, así que la cerramos inmediatamente.
-            Auth::logout();
+            return new class implements RegisterResponse {
+                public function toResponse($request)
+                {
+                    // Fortify intentó iniciar sesión por debajo del agua, así que la cerramos inmediatamente.
+                    Auth::logout();
 
-            // Limpiamos cualquier rastro de la sesión
-            request()->session()->invalidate();
-            request()->session()->regenerateToken();
+                    // Limpiamos cualquier rastro de la sesión
+                    request()->session()->invalidate();
+                    request()->session()->regenerateToken();
 
-            // Los redirigimos a la vista de login
-            return redirect()->route('login')->with('status', '¡Tu cuenta ha sido creada con éxito! Por favor, inicia sesión.');
+                    // Los redirigimos a la vista de login
+                    return redirect()->route('login')->with('status', '¡Tu cuenta ha sido creada con éxito! Por favor, inicia sesión.');
+                }
+            };
         });
     }
 }

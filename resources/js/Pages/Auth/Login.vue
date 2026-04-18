@@ -30,60 +30,76 @@ const submit = () => {
 </script>
 
 <template>
-    <Head title="Log in" />
+    <Head title="Iniciar Sesión | NexSalud" />
 
     <AuthenticationCard>
         <template #logo>
             <AuthenticationCardLogo />
         </template>
 
-        <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
+        <div class="mb-8 text-center">
+            <h2 class="text-2xl font-extrabold text-gray-900">Bienvenido de vuelta</h2>
+            <p class="text-sm text-gray-500 mt-1">Ingresa a tu portal médico o cuenta familiar</p>
+        </div>
+
+        <div v-if="status" class="mb-4 font-medium text-sm text-emerald-600 bg-emerald-50 p-3 rounded-lg text-center">
             {{ status }}
         </div>
 
-        <form @submit.prevent="submit">
+        <form @submit.prevent="submit" class="space-y-5">
             <div>
-                <InputLabel for="email" value="Email" />
+                <InputLabel for="email" value="Correo Electrónico" />
                 <TextInput
                     id="email"
                     v-model="form.email"
                     type="email"
-                    class="mt-1 block w-full"
+                    class="mt-1 block w-full focus:ring-blue-500 focus:border-blue-500"
                     required
                     autofocus
                     autocomplete="username"
+                    placeholder="tu@correo.com"
                 />
                 <InputError class="mt-2" :message="form.errors.email" />
             </div>
 
-            <div class="mt-4">
-                <InputLabel for="password" value="Password" />
+            <div>
+                <div class="flex justify-between items-center mb-1">
+                    <InputLabel for="password" value="Contraseña" />
+                    <Link v-if="canResetPassword" :href="route('password.request')" class="text-xs font-semibold text-blue-600 hover:text-blue-800 transition">
+                        ¿Olvidaste tu contraseña?
+                    </Link>
+                </div>
                 <TextInput
                     id="password"
                     v-model="form.password"
                     type="password"
-                    class="mt-1 block w-full"
+                    class="mt-1 block w-full focus:ring-blue-500 focus:border-blue-500"
                     required
                     autocomplete="current-password"
                 />
                 <InputError class="mt-2" :message="form.errors.password" />
             </div>
 
-            <div class="block mt-4">
+            <div class="block">
                 <label class="flex items-center">
-                    <Checkbox v-model:checked="form.remember" name="remember" />
-                    <span class="ms-2 text-sm text-gray-600">Remember me</span>
+                    <Checkbox v-model:checked="form.remember" name="remember" class="text-blue-600 focus:ring-blue-500" />
+                    <span class="ms-2 text-sm text-gray-600 font-medium">Mantener sesión iniciada</span>
                 </label>
             </div>
 
-            <div class="flex items-center justify-end mt-4">
-                <Link v-if="canResetPassword" :href="route('password.request')" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Forgot your password?
-                </Link>
-
-                <PrimaryButton class="ms-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                    Log in
+            <div class="pt-2">
+                <PrimaryButton class="w-full justify-center py-3 text-base bg-slate-800 hover:bg-slate-900" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                    Iniciar Sesión
                 </PrimaryButton>
+            </div>
+
+            <div class="text-center mt-6">
+                <p class="text-sm text-gray-600">
+                    ¿Aún no tienes cuenta?
+                    <Link :href="route('register')" class="font-bold text-blue-600 hover:text-blue-800 transition">
+                        Regístrate aquí
+                    </Link>
+                </p>
             </div>
         </form>
     </AuthenticationCard>

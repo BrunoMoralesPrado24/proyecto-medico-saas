@@ -12,7 +12,7 @@ const form = useForm({
     name: '',
     email: '',
     curp: '',
-    role_type: 'medico', // Valor por defecto para el radio button
+    role_type: 'medico', // Valor por defecto
     password: '',
     password_confirmation: '',
     terms: false,
@@ -23,6 +23,15 @@ const form = useForm({
 });
 
 const submit = () => {
+    // Si es paciente, limpiamos los datos médicos antes de enviar por si acaso
+    if (form.role_type === 'paciente_titular') {
+        form.curp = '';
+        form.clinic_name = '';
+        form.clues = '';
+        form.cedula_profesional = '';
+        form.universidad_egreso = '';
+    }
+
     form.post(route('register'), {
         onFinish: () => form.reset('password', 'password_confirmation'),
     });
@@ -30,7 +39,6 @@ const submit = () => {
 </script>
 
 <template>
-
     <Head title="Registro" />
 
     <AuthenticationCard>
@@ -42,37 +50,29 @@ const submit = () => {
 
             <div class="mb-6">
                 <InputLabel value="¿Qué tipo de cuenta deseas crear?"
-                    class="mb-3 text-base font-semibold text-gray-700" />
+                    class="mb-3 text-base font-semibold text-gray-700 text-center" />
                 <div class="flex space-x-4">
                     <label
                         class="flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer flex-1 transition-all duration-200"
                         :class="form.role_type === 'medico' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 hover:bg-gray-50 text-gray-600'">
                         <input type="radio" v-model="form.role_type" value="medico" class="hidden">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                            stroke="currentColor" class="w-8 h-8 mb-2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M19 7.5v3m0 0v3m0-3h3m-3 0h-3m-2.25-4.125a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0ZM4 19.235v-.11a6.375 6.375 0 0 1 12.75 0v.109A12.318 12.318 0 0 1 10.374 21c-2.331 0-4.512-.645-6.374-1.766Z" />
-                        </svg>
+                        <span class="text-3xl mb-2">👨‍⚕️</span>
                         <span class="text-sm font-bold">Soy Médico</span>
                     </label>
 
                     <label
                         class="flex flex-col items-center justify-center p-4 border-2 rounded-xl cursor-pointer flex-1 transition-all duration-200"
-                        :class="form.role_type === 'paciente_titular' ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 hover:bg-gray-50 text-gray-600'">
+                        :class="form.role_type === 'paciente_titular' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-200 hover:bg-gray-50 text-gray-600'">
                         <input type="radio" v-model="form.role_type" value="paciente_titular" class="hidden">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                            stroke="currentColor" class="w-8 h-8 mb-2">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-                        </svg>
-                        <span class="text-sm font-bold">Soy Paciente</span>
+                        <span class="text-3xl mb-2">👨‍👩‍👧‍👦</span>
+                        <span class="text-sm font-bold text-center">Cuenta Familiar</span>
                     </label>
                 </div>
                 <InputError class="mt-2" :message="form.errors.role_type" />
             </div>
 
             <div>
-                <InputLabel for="name" value="Nombre Completo" />
+                <InputLabel for="name" value="Nombre Completo (Titular de la cuenta)" />
                 <TextInput id="name" v-model="form.name" type="text" class="mt-1 block w-full" required autofocus
                     pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$" title="Solo se permiten letras y espacios" maxlength="100"
                     autocomplete="name" />
@@ -80,18 +80,10 @@ const submit = () => {
             </div>
 
             <div class="mt-4">
-                <InputLabel for="email" value="Email" />
+                <InputLabel for="email" value="Correo Electrónico" />
                 <TextInput id="email" v-model="form.email" type="email" class="mt-1 block w-full" required
                     autocomplete="username" />
                 <InputError class="mt-2" :message="form.errors.email" />
-            </div>
-
-            <div class="mt-4">
-                <InputLabel for="curp" value="CURP" />
-                <TextInput id="curp" v-model="form.curp" type="text" class="mt-1 block w-full uppercase" required
-                    pattern="^[a-zA-Z]{4}\d{6}[hHmM][a-zA-Z]{5}[a-zA-Z\d]\d$" title="Debe ser un CURP válido de 18 caracteres"
-                    maxlength="18" />
-                <InputError class="mt-2" :message="form.errors.curp" />
             </div>
 
             <div class="mt-4">
@@ -110,7 +102,16 @@ const submit = () => {
 
             <div v-if="form.role_type === 'medico'"
                 class="mt-6 p-4 border border-blue-200 bg-blue-50 rounded-xl space-y-4">
-                <h3 class="font-bold text-blue-800 text-sm">Datos Profesionales y de la Clínica</h3>
+                <h3 class="font-bold text-blue-800 text-sm uppercase tracking-wider text-center mb-2">Datos Profesionales y de Clínica</h3>
+
+                <div>
+                    <InputLabel for="curp" value="CURP" />
+                    <TextInput id="curp" v-model="form.curp" type="text" class="mt-1 block w-full border-blue-300 focus:border-blue-500 focus:ring-blue-500 uppercase"
+                        :required="form.role_type === 'medico'"
+                        pattern="^[a-zA-Z]{4}\d{6}[hHmM][a-zA-Z]{5}[a-zA-Z\d]\d$" title="Debe ser un CURP válido de 18 caracteres"
+                        maxlength="18" />
+                    <InputError class="mt-2" :message="form.errors.curp" />
+                </div>
 
                 <div>
                     <InputLabel for="clues" value="CLUES de la Clínica (11 caracteres)" />
@@ -126,7 +127,7 @@ const submit = () => {
                     <InputLabel for="clinic_name" value="Nombre de la Clínica" />
                     <TextInput id="clinic_name" v-model="form.clinic_name" type="text"
                         class="mt-1 block w-full border-blue-300 focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="Solo se usará si la CLUES es nueva en el sistema"
+                        placeholder="Solo se usará si la CLUES es nueva"
                         :required="form.role_type === 'medico'" />
                     <InputError class="mt-2" :message="form.errors.clinic_name" />
                 </div>
@@ -155,9 +156,9 @@ const submit = () => {
 
                         <div class="ms-2">
                             Acepto los <a target="_blank" :href="route('terms.show')"
-                                class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Términos
+                                class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md">Términos
                                 y Condiciones</a> y la <a target="_blank" :href="route('policy.show')"
-                                class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Política
+                                class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md">Política
                                 de Privacidad</a>
                         </div>
                     </div>
@@ -167,7 +168,7 @@ const submit = () => {
 
             <div class="flex items-center justify-end mt-6">
                 <Link :href="route('login')"
-                    class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none">
                     ¿Ya tienes cuenta?
                 </Link>
 
