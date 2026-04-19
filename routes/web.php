@@ -143,12 +143,18 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), \App\Http\M
     // ==========================================
     // ÁREA DEL PACIENTE (Portal Familiar)
     // ==========================================
-    Route::prefix('paciente')->middleware(['auth', 'role:paciente_titular'])->group(function () {
+    /*Route::prefix('paciente')->middleware(['auth', 'role:paciente_titular'])->group(function () {
 
         // Selector de Perfiles (Netflix Style)
         Route::get('/selector', [App\Http\Controllers\Patient\ProfileController::class, 'index'])->name('patient.profiles.index');
         Route::post('/selector', [App\Http\Controllers\Patient\ProfileController::class, 'store'])->name('patient.profiles.store');
         Route::post('/selector/{profile}/select', [App\Http\Controllers\Patient\ProfileController::class, 'select'])->name('patient.profiles.select');
+        // Dashboard principal (La Bóveda)
+        Route::get('/dashboard', [App\Http\Controllers\Patient\MedicalRecordController::class, 'index'])->name('paciente.dashboard');
+        
+        // Descarga de receta encriptada por el paciente
+        Route::get('/boveda/recetas/{hash}/pdf', [App\Http\Controllers\Patient\MedicalRecordController::class, 'printPrescription'])->name('patient.prescriptions.pdf');
+
 
         // Dashboard del Perfil Seleccionado (Requiere haber elegido un perfil)
         Route::get('/dashboard', function () {
@@ -157,5 +163,23 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), \App\Http\M
                 'profile' => \App\Models\PatientProfile::find(session('active_patient_profile_id'))
             ]);
         })->name('paciente.dashboard');
+    });*/ //COPIA DE SEGURIDAD POR SI ACASO
+
+    // ==========================================
+    // ÁREA DEL PACIENTE (Portal Familiar)
+    // ==========================================
+    Route::prefix('paciente')->middleware(['auth', 'role:paciente_titular'])->group(function () {
+
+        // Selector de Perfiles (Netflix Style)
+        Route::get('/selector', [App\Http\Controllers\Patient\ProfileController::class, 'index'])->name('patient.profiles.index');
+        Route::post('/selector', [App\Http\Controllers\Patient\ProfileController::class, 'store'])->name('patient.profiles.store');
+        Route::post('/selector/{profile}/select', [App\Http\Controllers\Patient\ProfileController::class, 'select'])->name('patient.profiles.select');
+
+        // 👇 EL NUEVO DASHBOARD ES LA BÓVEDA 👇
+        // Al entrar al dashboard, Laravel irá al controlador, buscará las recetas y renderizará Boveda.vue
+        Route::get('/dashboard', [App\Http\Controllers\Patient\MedicalRecordController::class, 'index'])->name('paciente.dashboard');
+        
+        // Descarga de receta encriptada por el paciente
+        Route::get('/boveda/recetas/{hash}/pdf', [App\Http\Controllers\Patient\MedicalRecordController::class, 'printPrescription'])->name('patient.prescriptions.pdf');
     });
 });

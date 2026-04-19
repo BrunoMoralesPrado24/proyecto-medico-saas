@@ -26,6 +26,22 @@
 </head>
 <body>
 
+    @if(isset($isPatientCopy) && $isPatientCopy)
+        <div style="position: absolute; top: 40%; left: 5%; width: 90%; transform: rotate(-35deg); text-align: center; z-index: -1; opacity: 0.15;">
+            @if(isset($isExpired) && $isExpired)
+                <div style="border: 8px solid #dc2626; padding: 20px; color: #dc2626;">
+                    <h1 style="font-size: 60px; margin: 0; font-family: sans-serif; font-weight: 900; line-height: 1;">RECETA VENCIDA</h1>
+                    <h2 style="font-size: 35px; margin: 0; font-family: sans-serif; font-weight: bold;">USO NO AUTORIZADO</h2>
+                </div>
+            @else
+                <div style="border: 8px solid #1e3a8a; padding: 20px; color: #1e3a8a;">
+                    <h1 style="font-size: 60px; margin: 0; font-family: sans-serif; font-weight: 900; line-height: 1;">COPIA DIGITAL</h1>
+                    <h2 style="font-size: 35px; margin: 0; font-family: sans-serif; font-weight: bold;">DOCUMENTO DEL PACIENTE</h2>
+                </div>
+            @endif
+        </div>
+    @endif
+
     <div class="header">
         <table>
             <tr>

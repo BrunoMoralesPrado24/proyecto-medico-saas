@@ -49,9 +49,9 @@ class PatientController extends Controller
 
     public function store(Request $request)
     {
-        // 1. Validación (Si esto falla, te regresa a la vista con errores)
         $request->validate([
             'nombre' => 'required|string|max:255',
+            'curp' => 'required|string|size:18', // <--- NUEVO: CURP Obligatorio
             'fecha_nacimiento' => 'required|date',
             'mode' => 'required|in:huerfano,vincular,crear',
             'email' => 'nullable|email',
@@ -74,8 +74,6 @@ class PatientController extends Controller
             } 
             elseif ($request->mode === 'crear') {
                 $tempPassword = Str::random(12);
-
-                // Llamamos a tu acción de Fortify que ya tienes configurada
                 $creator = new \App\Actions\Fortify\CreateNewUser();
                 $user = $creator->create([
                     'name' => $request->nombre_titular,
@@ -84,33 +82,47 @@ class PatientController extends Controller
                     'password_confirmation' => $tempPassword,
                     'role_type' => 'paciente_titular'
                 ]);
-
                 $user->update(['must_change_password' => true]);
                 $userId = $user->id;
-
-                // Aquí puedes disparar el correo después
             }
 
-            // Creamos el paciente
+            // 1. Creamos el paciente en el portal del Doctor
             $patient = Patient::create([
                 'nombre' => $request->nombre,
+                'curp' => strtoupper($request->curp), // <--- Guardamos el CURP
                 'fecha_nacimiento' => $request->fecha_nacimiento,
                 'telefono' => $request->telefono,
                 'email' => $request->email,
                 'user_id' => $userId,
                 'privacy_notice_accepted_at' => now(),
-                'sexo' => $request->sexo,                 // <--- AGREGAR
-                'estado_civil' => $request->estado_civil, // <--- AGREGAR
-                'ocupacion' => $request->ocupacion,       // <--- AGREGAR
-                'religion' => $request->religion,         // <--- AGREGAR
+                'sexo' => $request->sexo,                 
+                'estado_civil' => $request->estado_civil, 
+                'ocupacion' => $request->ocupacion,       
+                'religion' => $request->religion,         
             ]);
 
-            // Lo unimos a la clínica
             $patient->clinics()->attach($clinicId, [
                 'expediente_fisico' => 'EXP-' . date('Y') . '-' . str_pad($patient->id, 4, '0', STR_PAD_LEFT)
             ]);
 
-            return redirect()->route('patients.index')->with('new_patient_id', $patient->id); // <--- CAMBIAR ESTA LÍNEA
+            // 🔥 LA MAGIA: Auto-generar el Perfil Netflix si hay usuario vinculado
+            if ($userId) {
+                \App\Models\PatientProfile::firstOrCreate(
+                    [
+                        'user_id' => $userId,
+                        'curp' => strtoupper($request->curp)
+                    ],
+                    [
+                        'nombre_completo' => $request->nombre,
+                        'fecha_nacimiento' => $request->fecha_nacimiento,
+                        'genero' => strtolower($request->sexo ?? 'otro'),
+                        'parentesco' => 'titular', // Por defecto
+                        'avatar_color' => 'indigo' // Color base
+                    ]
+                );
+            }
+
+            return redirect()->route('patients.index')->with('success', 'Paciente registrado con éxito.'); 
         });
     }
 
@@ -130,8 +142,9 @@ class PatientController extends Controller
     {
         $request->validate([
             'nombre' => 'required|string|max:255',
+            'curp' => 'required|string|size:18', // <--- NUEVO
             'fecha_nacimiento' => 'required|date',
-            'mode' => 'required|in:editar,vincular,crear', // 'editar' es el modo normal
+            'mode' => 'required|in:editar,vincular,crear', 
             'email' => 'nullable|email',
             'nombre_titular' => 'nullable|required_if:mode,crear|string|max:255',
             'sexo' => 'nullable|in:Masculino,Femenino,Otro',
@@ -142,7 +155,6 @@ class PatientController extends Controller
     
         $userId = $patient->user_id;
     
-        // Si el médico decidió vincular o crear cuenta en este momento:
         if ($request->mode === 'vincular' && is_null($userId)) {
             $user = User::where('email', $request->email)->firstOrFail();
             $userId = $user->id;
@@ -161,17 +173,36 @@ class PatientController extends Controller
             $userId = $user->id;
         }
     
+        // 1. Actualizamos al paciente
         $patient->update([
             'nombre' => $request->nombre,
+            'curp' => strtoupper($request->curp), // <--- Guardamos el CURP
             'fecha_nacimiento' => $request->fecha_nacimiento,
             'telefono' => $request->telefono,
-            'email' => $request->email, // Ahora se actualiza siempre
-            'user_id' => $userId, // Se actualiza si hubo vinculación
+            'email' => $request->email, 
+            'user_id' => $userId, 
             'sexo' => $request->sexo,
             'estado_civil' => $request->estado_civil,
             'ocupacion' => $request->ocupacion,
             'religion' => $request->religion,
         ]);
+
+        // 🔥 LA MAGIA: Si el doctor acaba de vincular la cuenta, creamos el perfil Netflix
+        if ($userId) {
+            \App\Models\PatientProfile::firstOrCreate(
+                [
+                    'user_id' => $userId,
+                    'curp' => strtoupper($request->curp)
+                ],
+                [
+                    'nombre_completo' => $request->nombre,
+                    'fecha_nacimiento' => $request->fecha_nacimiento,
+                    'genero' => strtolower($request->sexo ?? 'otro'),
+                    'parentesco' => 'titular',
+                    'avatar_color' => 'indigo'
+                ]
+            );
+        }
     
         return redirect()->route('patients.index');
     }

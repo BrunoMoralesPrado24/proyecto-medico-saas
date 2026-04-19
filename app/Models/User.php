@@ -83,4 +83,14 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         return $this->hasMany(PatientProfile::class);
     }
+
+    /**
+     * Obtiene los perfiles de paciente asociados a este usuario (Estilo Netflix)
+     */
+    public function profiles()
+    {
+        // Asumiendo que tu modelo se llama PatientProfile. 
+        // Si se llama diferente, ajusta el nombre aquí dentro.
+        return $this->hasMany(\App\Models\PatientProfile::class);
+    }
 }
