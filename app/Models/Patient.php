@@ -12,13 +12,14 @@ class Patient extends Model
 
     protected $fillable = [
         'nombre', 
+        'curp', // <--- NUEVO: Agregamos el CURP
         'fecha_nacimiento', 
-        'sexo', // <-- NUEVO
+        'sexo', 
         'telefono', 
         'email', 
-        'estado_civil', // <-- NUEVO
-        'ocupacion', // <-- NUEVO
-        'religion', // <-- NUEVO
+        'estado_civil', 
+        'ocupacion', 
+        'religion', 
         'user_id', 
         'privacy_notice_accepted_at'
     ];
@@ -52,5 +53,12 @@ class Patient extends Model
         return $this->hasOne(MedicalHistory::class);
     }
 
-
+    /**
+     * RELACIÓN: Obtiene las consultas médicas de este paciente.
+     */
+    public function consultations()
+    {
+        // Un paciente "tiene muchas" consultas
+        return $this->hasMany(Consultation::class);
+    }
 }

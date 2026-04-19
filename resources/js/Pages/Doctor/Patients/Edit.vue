@@ -13,6 +13,7 @@ const isLinked = computed(() => props.patient.user_id !== null);
 // 2. Estado del Formulario
 const form = useForm({
     nombre: props.patient.nombre,
+    curp: props.patient.curp || '',
     fecha_nacimiento: props.patient.fecha_nacimiento ? props.patient.fecha_nacimiento.split('T')[0] : '',
     telefono: props.patient.telefono,
     email: props.patient.email || '',
@@ -49,7 +50,7 @@ watch(() => form.email, (newEmail) => {
         
         typingTimer = setTimeout(async () => {
             try {
-                const response = await axios.post('/api/check-email', { email: newEmail });
+                const response = await axios.post('/check-email', { email: newEmail });
                 emailStatus.value = response.data.exists ? 'exists' : 'not_found';
             } catch (error) {
                 emailStatus.value = 'error';
@@ -105,17 +106,23 @@ const submit = () => {
                 
                 <h3 class="text-lg font-semibold text-gray-800 border-b pb-2 mb-4">1. Datos Personales</h3>
                 
-                <div class="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-4">
-                    <div class="col-span-2">
-                        <label class="block text-sm font-medium text-gray-700">Nombre Completo</label>
-                        <input v-model="form.nombre" type="text" class="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm" required>
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-4 mb-4">
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700">CURP *</label>
+                        <input v-model="form.curp" type="text" maxlength="18" class="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm uppercase" required>
+                        <div v-if="form.errors.curp" class="text-red-500 text-xs mt-1">{{ form.errors.curp }}</div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Fecha de Nacimiento</label>
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700">Nombre Completo *</label>
+                        <input v-model="form.nombre" type="text" class="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm" required autofocus>
+                        <div v-if="form.errors.nombre" class="text-red-500 text-xs mt-1">{{ form.errors.nombre }}</div>
+                    </div>
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700">Nacimiento *</label>
                         <input v-model="form.fecha_nacimiento" type="date" class="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm" required>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+                    <div class="col-span-2 sm:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700">Teléfono (Opcional)</label>
                         <input v-model="form.telefono" type="text" class="mt-1 block w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm">
                     </div>
                 </div>
