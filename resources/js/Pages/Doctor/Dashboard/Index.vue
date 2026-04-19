@@ -2,6 +2,10 @@
 import Sidebar from '@/Components/Sidebar.vue';
 import { Link, usePage } from '@inertiajs/vue3';
 
+const page = usePage();
+const prefijo = page.props.auth.user.prefijo_medico;
+
+console.log("El prefijo es: " + prefijo);
 const props = defineProps({
     stats: Object,
     proximosPacientes: Array
@@ -17,6 +21,7 @@ const calcularEdad = (fecha) => {
     if (mes < 0 || (mes === 0 && hoy.getDate() < nacimiento.getDate())) edad--;
     return edad;
 };
+
 </script>
 
 <template>
@@ -31,7 +36,7 @@ const calcularEdad = (fecha) => {
                     <div>
                         <p class="text-sm font-bold text-blue-600 uppercase tracking-widest mb-1">¡Hola de nuevo!</p>
                         <h1 class="text-3xl font-black text-gray-900 tracking-tight">
-                            Dr(a). {{ $page.props.auth.user.name }}
+                            {{ $page.props.auth.user.prefijo_medico }} {{ $page.props.auth.user.name }}
                         </h1>
                         <p class="text-gray-500 mt-2 font-medium">Aquí tienes el resumen de tu clínica y la agenda para hoy.</p>
                     </div>

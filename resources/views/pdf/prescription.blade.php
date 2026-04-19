@@ -53,7 +53,7 @@
                     </div>
                 </td>
                 <td width="50%" style="text-align: right; vertical-align: top;">
-                    <div class="doc-name">Dr(a). {{ $doctorUser->name }}</div>
+                    <div class="doc-name">{{ strtolower($doctorProfile->sexo ?? '') === 'femenino' ? 'Dra.' : 'Dr.' }} {{ $doctorUser->name }}</div>
                     <div class="doc-details">
                         Cédula Profesional: {{ $doctorProfile->cedula_profesional ?? 'En Trámite' }}<br>
                         Universidad: {{ $doctorProfile->universidad_egreso ?? 'No especificada' }}<br>

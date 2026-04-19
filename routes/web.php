@@ -60,7 +60,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), \App\Http\M
             if (!session()->has('active_clinic_id')) {
                 return redirect()->route('clinics.select'); // Aduana de clínicas
             }
-            return app(\App\Http\Controllers\Doctor\DashboardController::class)->index();
+            return redirect()->route('doctor.dashboard');
         }
         if ($activeRole === 'paciente_titular') {
             return redirect()->route('patient.profiles.index'); // O al selector Netflix
@@ -116,8 +116,8 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), \App\Http\M
 
         // 2. Grupo ULTRA PROTEGIDO (Requiere Clínica Seleccionada)
         Route::middleware([EnsureActiveClinic::class])->group(function () {
-            // RUTAS DE PACIENTES
-            // URL: /doctor/patients | Nombres cortos: patients.index, patients.create, etc.
+            Route::get('/dashboard', [DashboardController::class, 'index'])->name('doctor.dashboard');
+            // RUTAS DE PACIENTES URL: /doctor/patients | Nombres cortos: patients.index, patients.create, etc.
             Route::resource('patients', PatientController::class);
 
             //MÓDULO: Expedientes Clínicos (Santuario Médico)
