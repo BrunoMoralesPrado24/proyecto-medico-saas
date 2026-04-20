@@ -12,6 +12,7 @@ class Doctor extends Model
 
     protected $fillable = [
         'user_id',
+        'sexo',
         'cedula_profesional',
         'cedula_especialidad',
         'universidad_egreso',
