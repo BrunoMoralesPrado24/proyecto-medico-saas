@@ -50,7 +50,7 @@ class DashboardController extends Controller
                 });
         }
 
-        return Inertia::render('Doctor/Dashboard/Index', [
+        return Inertia::render('Doctor/Dashboard', [
             'stats' => [
                 'totalPacientes' => $totalPacientes,
                 'consultasMes' => $consultasMes,

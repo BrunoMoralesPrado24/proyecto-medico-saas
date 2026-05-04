@@ -151,7 +151,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), \App\Http\M
         Route::post('/selector/{profile}/select', [App\Http\Controllers\Patient\ProfileController::class, 'select'])->name('patient.profiles.select');
         // Dashboard principal (La Bóveda)
         Route::get('/dashboard', [App\Http\Controllers\Patient\MedicalRecordController::class, 'index'])->name('paciente.dashboard');
-        
+
         // Descarga de receta encriptada por el paciente
         Route::get('/boveda/recetas/{hash}/pdf', [App\Http\Controllers\Patient\MedicalRecordController::class, 'printPrescription'])->name('patient.prescriptions.pdf');
 
@@ -175,10 +175,12 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), \App\Http\M
         Route::post('/selector', [App\Http\Controllers\Patient\ProfileController::class, 'store'])->name('patient.profiles.store');
         Route::post('/selector/{profile}/select', [App\Http\Controllers\Patient\ProfileController::class, 'select'])->name('patient.profiles.select');
 
+        // 🔥 AGREGA ESTA LÍNEA PARA PERMITIR EL BORRADO
+        Route::delete('/selector/{profile}', [App\Http\Controllers\Patient\ProfileController::class, 'destroy'])->name('patient.profiles.destroy');
         // 👇 EL NUEVO DASHBOARD ES LA BÓVEDA 👇
         // Al entrar al dashboard, Laravel irá al controlador, buscará las recetas y renderizará Boveda.vue
         Route::get('/dashboard', [App\Http\Controllers\Patient\MedicalRecordController::class, 'index'])->name('paciente.dashboard');
-        
+
         // Descarga de receta encriptada por el paciente
         Route::get('/boveda/recetas/{hash}/pdf', [App\Http\Controllers\Patient\MedicalRecordController::class, 'printPrescription'])->name('patient.prescriptions.pdf');
     });
