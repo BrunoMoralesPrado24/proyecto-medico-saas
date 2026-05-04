@@ -48,6 +48,17 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), \App\Http\M
         return redirect()->route('dashboard');
     })->name('role.select');
 
+    // 🛡️ RESETEO SEGURO DE ROL (Para cambiar entre Médico y Paciente)
+    Route::post('/role-switch', function () {
+        // Purgamos las variables de sesión críticas para forzar una nueva selección
+        session()->forget('active_role');
+        session()->forget('active_patient_profile_id');
+        // Opcional: session()->forget('active_clinic_id');
+
+        // Redirigimos al distribuidor principal
+        return redirect()->route('dashboard');
+    })->name('role.switch');
+
     // 🚦 CONTROLADOR DE TRÁFICO PRINCIPAL
     // Atrapa a todos los que inician sesión y deciden su destino
     // 🚦 EL GRAN DISTRIBUIDOR (Controlador de Tráfico NexSalud)
@@ -151,7 +162,7 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), \App\Http\M
         Route::post('/selector/{profile}/select', [App\Http\Controllers\Patient\ProfileController::class, 'select'])->name('patient.profiles.select');
         // Dashboard principal (La Bóveda)
         Route::get('/dashboard', [App\Http\Controllers\Patient\MedicalRecordController::class, 'index'])->name('paciente.dashboard');
-        
+
         // Descarga de receta encriptada por el paciente
         Route::get('/boveda/recetas/{hash}/pdf', [App\Http\Controllers\Patient\MedicalRecordController::class, 'printPrescription'])->name('patient.prescriptions.pdf');
 
@@ -175,10 +186,12 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), \App\Http\M
         Route::post('/selector', [App\Http\Controllers\Patient\ProfileController::class, 'store'])->name('patient.profiles.store');
         Route::post('/selector/{profile}/select', [App\Http\Controllers\Patient\ProfileController::class, 'select'])->name('patient.profiles.select');
 
+        // 🔥 AGREGA ESTA LÍNEA PARA PERMITIR EL BORRADO
+        Route::delete('/selector/{profile}', [App\Http\Controllers\Patient\ProfileController::class, 'destroy'])->name('patient.profiles.destroy');
         // 👇 EL NUEVO DASHBOARD ES LA BÓVEDA 👇
         // Al entrar al dashboard, Laravel irá al controlador, buscará las recetas y renderizará Boveda.vue
         Route::get('/dashboard', [App\Http\Controllers\Patient\MedicalRecordController::class, 'index'])->name('paciente.dashboard');
-        
+
         // Descarga de receta encriptada por el paciente
         Route::get('/boveda/recetas/{hash}/pdf', [App\Http\Controllers\Patient\MedicalRecordController::class, 'printPrescription'])->name('patient.prescriptions.pdf');
     });
