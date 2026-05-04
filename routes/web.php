@@ -48,6 +48,17 @@ Route::middleware(['auth:sanctum', config('jetstream.auth_session'), \App\Http\M
         return redirect()->route('dashboard');
     })->name('role.select');
 
+    // 🛡️ RESETEO SEGURO DE ROL (Para cambiar entre Médico y Paciente)
+    Route::post('/role-switch', function () {
+        // Purgamos las variables de sesión críticas para forzar una nueva selección
+        session()->forget('active_role');
+        session()->forget('active_patient_profile_id');
+        // Opcional: session()->forget('active_clinic_id');
+
+        // Redirigimos al distribuidor principal
+        return redirect()->route('dashboard');
+    })->name('role.switch');
+
     // 🚦 CONTROLADOR DE TRÁFICO PRINCIPAL
     // Atrapa a todos los que inician sesión y deciden su destino
     // 🚦 EL GRAN DISTRIBUIDOR (Controlador de Tráfico NexSalud)

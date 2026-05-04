@@ -36,12 +36,12 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $user = $request->user();
-        $prefijo = 'Dr(e).'; // Valor por defecto, por si acaso no tiene sexo definido
+        $prefijo = 'Dr(e).'; // Valor por defecto
 
         // 1. Calculamos el prefijo si el usuario logueado es un médico
         if ($user && $user->hasRole('medico')) {
             $doctor = \App\Models\Doctor::where('user_id', $user->id)->first();
-            
+
             if ($doctor && $doctor->sexo) {
                 $sexo = strtolower($doctor->sexo);
                 if ($sexo === 'femenino') {
@@ -55,24 +55,28 @@ class HandleInertiaRequests extends Middleware
         // 2. Traemos los datos que Laravel/Inertia ya comparten por defecto
         $shared = parent::share($request);
 
-        // 3. Extendemos el objeto auth.user de forma segura sin borrar lo que ya trae
+        // 3. Extendemos el objeto auth.user de forma segura
         $authUser = $shared['auth']['user'] ?? ($user ? $user->toArray() : null);
-        
+
         if ($authUser) {
             $authUser['prefijo_medico'] = $prefijo;
         }
 
         return [
             ...$shared,
-            
+
             // Inyectamos nuestro auth.user modificado
             'auth' => [
                 ...($shared['auth'] ?? []),
                 'user' => $authUser,
             ],
-            
-            // Mandamos los roles de Spatie al frontend de manera segura
+
+            // 🛡️ ARQUITECTURA: Mandamos los roles de Spatie al frontend
             'user_roles' => $user ? $user->getRoleNames() : [],
+
+            // 🛡️ CORRECCIÓN CRÍTICA: Inyectamos el estado de la sesión actual para el Sidebar
+            'active_role' => session('active_role'),
+            'active_patient_profile_id' => session('active_patient_profile_id'),
         ];
     }
 }
